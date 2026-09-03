@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QStackedWidget, QTextBrowser, QLabel, QWidget, QVBoxLayout,
-    QPushButton, QHBoxLayout, QSlider, QTextEdit
+    QPushButton, QHBoxLayout, QSlider, QTextEdit, QScrollArea, QSizePolicy
 )
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QPixmap
@@ -57,6 +57,82 @@ def _escape_html(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+class PdfViewer(QWidget):
+    def __init__(self):
+        super().__init__()
+        self._pages: list[dict] = []
+        self._current = 0
+
+        self.image_label = QLabel()
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_label.setScaledContents(True)
+        self.image_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidget(self.image_label)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.prev_btn = QPushButton("< Prev")
+        self.prev_btn.clicked.connect(self._prev_page)
+
+        self.next_btn = QPushButton("Next >")
+        self.next_btn.clicked.connect(self._next_page)
+
+        self.page_label = QLabel()
+        self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        controls = QHBoxLayout()
+        controls.addWidget(self.prev_btn)
+        controls.addWidget(self.page_label)
+        controls.addWidget(self.next_btn)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.scroll_area)
+        layout.addLayout(controls)
+
+    def load(self, result: dict):
+        self._pages = result.get("page_images", [])
+        self._current = 0
+        self._show_page(0)
+
+    def _show_page(self, index: int):
+        if not self._pages:
+            self.image_label.setText("No pages")
+            self.page_label.setText("")
+            self.prev_btn.setEnabled(False)
+            self.next_btn.setEnabled(False)
+            return
+
+        self._current = index
+        page = self._pages[index]
+        pixmap = QPixmap(page["image_path"])
+        if not pixmap.isNull():
+            scaled = pixmap.scaled(
+                self.scroll_area.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            self.image_label.setPixmap(scaled)
+        else:
+            self.image_label.setText(f"Failed to render page {index + 1}")
+
+        self.page_label.setText(f"Page {index + 1} / {len(self._pages)}")
+        self.prev_btn.setEnabled(index > 0)
+        self.next_btn.setEnabled(index < len(self._pages) - 1)
+
+    def _prev_page(self):
+        if self._current > 0:
+            self._show_page(self._current - 1)
+
+    def _next_page(self):
+        if self._current < len(self._pages) - 1:
+            self._show_page(self._current + 1)
+
+
 class ContentViewer(QStackedWidget):
     def __init__(self):
         super().__init__()
@@ -82,6 +158,9 @@ class ContentViewer(QStackedWidget):
         else:
             self.video_view = None
             self.audio_view = None
+
+        self.pdf_viewer = PdfViewer()
+        self.addWidget(self.pdf_viewer)  # index 6
 
         self.set_placeholder("Select a file to view")
 
@@ -284,6 +363,9 @@ class ContentViewer(QStackedWidget):
                            "svg", "archive"}:
             self.text_view.setText(content)
             self.setCurrentIndex(0)
+        elif file_type == "pdf":
+            self.pdf_viewer.load(result)
+            self.setCurrentIndex(6)
         elif file_type == "image":
             path = result.get("path", "")
             pixmap = QPixmap(path)
