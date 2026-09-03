@@ -207,15 +207,19 @@ class ContentViewer(QStackedWidget):
         self.text_view = QTextBrowser()
         self.text_view.setOpenExternalLinks(True)
 
-        self.image_view = QLabel()
-        self.image_view.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_view.setScaledContents(True)
+        self.image_label = QLabel()
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.image_scroll = QScrollArea()
+        self.image_scroll.setWidget(self.image_label)
+        self.image_scroll.setWidgetResizable(True)
+        self.image_scroll.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.placeholder = QLabel()
         self.placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.addWidget(self.text_view)      # index 0
-        self.addWidget(self.image_view)     # index 1
+        self.addWidget(self.image_scroll)   # index 1
         self.addWidget(self.placeholder)    # index 2
 
         self._init_raw_view()
@@ -450,9 +454,16 @@ class ContentViewer(QStackedWidget):
             path = result.get("path", "")
             pixmap = QPixmap(path)
             if not pixmap.isNull():
-                self.image_view.setPixmap(pixmap)
+                max_w = self.image_scroll.viewport().width() - 20
+                max_h = self.image_scroll.viewport().height() - 20
+                scaled = pixmap.scaled(
+                    max_w, max_h,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                self.image_label.setPixmap(scaled)
             else:
-                self.image_view.setText(content)
+                self.image_label.setText(content)
             self.setCurrentIndex(1)
         elif file_type == "raw":
             self.raw_result = result
