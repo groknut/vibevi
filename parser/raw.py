@@ -7,19 +7,18 @@ MAX_RAW_SIZE = 10 * 1024 * 1024  # 10MB
 class RawResult(FileMeta):
     type: str
     content: str
+    hex_content: str
     truncated: bool
 
 
 def parse_raw(path: str) -> RawResult:
-    """Read any file as raw bytes for unknown or unsupported types.
-
-    Limits reading to MAX_RAW_SIZE bytes to avoid memory issues.
-    """
     size = file_meta(path)["size"]
     truncated = size > MAX_RAW_SIZE
 
     with open(path, "rb") as f:
         data = f.read(MAX_RAW_SIZE)
+
+    text = data.decode("utf-8", errors="replace")
 
     preview_size = min(len(data), 512)
     hex_lines: list[str] = []
@@ -29,13 +28,14 @@ def parse_raw(path: str) -> RawResult:
         ascii_part = "".join(chr(b) if 32 <= b < 127 else "." for b in chunk)
         hex_lines.append(f"{offset:08x}  {hex_part:<48s}  {ascii_part}")
 
-    content = "\n".join(hex_lines)
+    hex_content = "\n".join(hex_lines)
     if truncated:
-        content += f"\n\n[Truncated: showing first {MAX_RAW_SIZE} bytes of {size} total]"
+        hex_content += f"\n\n[Truncated: showing first {MAX_RAW_SIZE} bytes of {size} total]"
 
     return {
         "type": "raw",
-        "content": content,
+        "content": text,
+        "hex_content": hex_content,
         "truncated": truncated,
         **file_meta(path),
     }
