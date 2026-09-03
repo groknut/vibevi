@@ -34,9 +34,10 @@ class ContentViewer(QStackedWidget):
         self._init_raw_view()
 
         if HAS_MULTIMEDIA:
-            self._init_video_player()
+            self._init_media_player()
         else:
             self.video_view = None
+            self.audio_view = None
 
         self.set_placeholder("Select a file to view")
 
@@ -69,13 +70,10 @@ class ContentViewer(QStackedWidget):
             self.raw_text.setText(self.raw_result.get("content", ""))
             self.raw_toggle.setText("Show Hex")
 
-    def _init_video_player(self):
+    def _init_media_player(self):
         self.player = QMediaPlayer()
         self.audio_output = QAudioOutput()
         self.player.setAudioOutput(self.audio_output)
-
-        self.video_widget = QVideoWidget()
-        self.player.setVideoOutput(self.video_widget)
 
         self.play_btn = QPushButton("Play")
         self.play_btn.clicked.connect(self._toggle_play)
@@ -88,17 +86,37 @@ class ContentViewer(QStackedWidget):
         self.player.durationChanged.connect(self._on_duration_changed)
         self.player.playbackStateChanged.connect(self._on_state_changed)
 
+        # Video view
+        self.video_widget = QVideoWidget()
+        self.player.setVideoOutput(self.video_widget)
+
         controls = QHBoxLayout()
         controls.addWidget(self.play_btn)
         controls.addWidget(self.slider)
 
-        container = QWidget()
-        layout = QVBoxLayout(container)
+        video_container = QWidget()
+        layout = QVBoxLayout(video_container)
         layout.addWidget(self.video_widget)
         layout.addLayout(controls)
 
-        self.video_view = container
-        self.addWidget(container)  # index 4
+        self.video_view = video_container
+        self.addWidget(video_container)  # index 4
+
+        # Audio view
+        self.audio_meta = QTextEdit()
+        self.audio_meta.setReadOnly(True)
+
+        audio_controls = QHBoxLayout()
+        audio_controls.addWidget(self.play_btn)
+        audio_controls.addWidget(self.slider)
+
+        audio_container = QWidget()
+        layout = QVBoxLayout(audio_container)
+        layout.addWidget(self.audio_meta)
+        layout.addLayout(audio_controls)
+
+        self.audio_view = audio_container
+        self.addWidget(audio_container)  # index 5
 
     def _toggle_play(self):
         if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -134,8 +152,13 @@ class ContentViewer(QStackedWidget):
                 self.text_view.setText(content)
                 self.setCurrentIndex(0)
         elif file_type == "audio":
-            self.text_view.setText(content)
-            self.setCurrentIndex(0)
+            if self.audio_view and HAS_MULTIMEDIA:
+                self.audio_meta.setText(content)
+                self.player.setSource(QUrl.fromLocalFile(result["path"]))
+                self.setCurrentIndex(5)
+            else:
+                self.text_view.setText(content)
+                self.setCurrentIndex(0)
         elif file_type == "image":
             path = result.get("path", "")
             pixmap = QPixmap(path)
