@@ -1,9 +1,10 @@
 import os
 from PyQt6.QtWidgets import (
     QMainWindow, QSplitter, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel
+    QPushButton, QLabel, QShortcut
 )
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QKeySequence
 from .file_tree import FileTree
 from .content_viewer import ContentViewer
 
@@ -78,6 +79,9 @@ class MainWindow(QMainWindow):
             self._current_dir = directory
             self.dir_label.setText(directory)
         self._update_nav()
+
+        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self)
+        quit_shortcut.activated.connect(self.close)
 
     def _on_tree_clicked(self, index):
         from pathlib import Path
