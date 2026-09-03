@@ -1,10 +1,9 @@
 import os
 from PyQt6.QtWidgets import (
     QMainWindow, QSplitter, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QListWidget, QListWidgetItem
+    QPushButton, QLabel, QListWidget, QListWidgetItem, QStyle
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QFileInfo
-from PyQt6.QtGui import QFileIconProvider
+from PyQt6.QtCore import Qt, pyqtSignal
 from .file_tree import FileTree
 from .content_viewer import ContentViewer
 from sort import sort_files, SortKey
@@ -150,15 +149,19 @@ class MainWindow(QMainWindow):
             reverse=self._sort_reverse,
         )
 
-        icon_provider = QFileIconProvider()
+        style = self.style()
+        file_icon = style.standardIcon(QStyle.StandardPixmap.SP_FileIcon)
+        dir_icon = style.standardIcon(QStyle.StandardPixmap.SP_DirIcon)
 
         self.sorted_list.clear()
         for entry in entries:
             item = QListWidgetItem(entry["name"])
             item.setData(Qt.ItemDataRole.UserRole, entry["path"])
 
-            info = QFileInfo(entry["path"])
-            item.setIcon(icon_provider.icon(info))
+            if os.path.isdir(entry["path"]):
+                item.setIcon(dir_icon)
+            else:
+                item.setIcon(file_icon)
 
             self.sorted_list.addItem(item)
 
