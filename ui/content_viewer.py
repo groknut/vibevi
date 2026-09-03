@@ -201,7 +201,9 @@ class ContentViewer(QStackedWidget):
         elif file_type == "markdown":
             self.text_view.setHtml(content)
             self.setCurrentIndex(0)
-        elif file_type in {"text", "log", "json", "xml"}:
+        elif file_type in {"text", "log", "json", "xml", "yaml", "toml", "ini",
+                           "properties", "csv", "code", "epub", "html", "svg",
+                           "archive"}:
             self.text_view.setText(content)
             self.setCurrentIndex(0)
         elif file_type == "image":
