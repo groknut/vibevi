@@ -187,12 +187,12 @@ class MainWindow(QMainWindow):
         for entry in entries:
             item = QTreeWidgetItem()
             item.setText(0, entry["name"])
-            item.setText(1, _format_size(entry["size"]))
+            item.setText(1, _format_size(entry["size"]) if not entry["is_dir"] else "")
             item.setText(2, _format_date(entry["date"]))
             item.setText(3, entry["extension"])
             item.setData(0, Qt.ItemDataRole.UserRole, entry["path"])
 
-            if os.path.isdir(entry["path"]):
+            if entry["is_dir"]:
                 item.setIcon(0, dir_icon)
             else:
                 item.setIcon(0, file_icon)

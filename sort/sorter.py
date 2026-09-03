@@ -18,17 +18,18 @@ class FileEntry(TypedDict):
     size: int
     extension: str
     date: float
+    is_dir: bool
 
 
 def scan_directory(path: str, recursive: bool = False) -> list[FileEntry]:
-    """Scan a directory and collect file entries.
+    """Scan a directory and collect file and directory entries.
 
     Args:
         path: str — directory path to scan.
         recursive: bool — if True, scan subdirectories recursively.
 
     Returns:
-        list[FileEntry] — list of file entries.
+        list[FileEntry] — list of file and directory entries.
     """
     dir_path = Path(path)
     if not dir_path.is_dir():
@@ -38,18 +39,20 @@ def scan_directory(path: str, recursive: bool = False) -> list[FileEntry]:
     pattern = "**/*" if recursive else "*"
 
     for item in dir_path.glob(pattern):
-        if not item.is_file():
+        if item.name.startswith("."):
             continue
 
         full_path = str(item)
         stat = item.stat()
+        is_dir = item.is_dir()
 
         entries.append({
             "path": full_path,
             "name": item.name,
-            "size": stat.st_size,
-            "extension": item.suffix.lower(),
+            "size": stat.st_size if not is_dir else 0,
+            "extension": item.suffix.lower() if not is_dir else "",
             "date": stat.st_ctime,
+            "is_dir": is_dir,
         })
 
     return entries
@@ -61,7 +64,9 @@ def sort_files(
     reverse: bool = False,
     recursive: bool = False,
 ) -> list[FileEntry]:
-    """Scan a directory and sort files.
+    """Scan a directory and sort files and directories.
+
+    Directories always appear before files within each sort group.
 
     Args:
         path: str — directory path to scan.
@@ -70,15 +75,20 @@ def sort_files(
         recursive: bool — if True, include files from subdirectories.
 
     Returns:
-        list[FileEntry] — sorted list of file entries.
+        list[FileEntry] — sorted list of file and directory entries.
     """
     entries = scan_directory(path, recursive=recursive)
 
-    if sort_by == SortKey.NAME:
-        entries.sort(key=lambda e: e["name"].lower(), reverse=reverse)
-    elif sort_by == SortKey.DATE:
-        entries.sort(key=lambda e: e["date"], reverse=reverse)
-    elif sort_by == SortKey.EXTENSION:
-        entries.sort(key=lambda e: (e["extension"], e["name"].lower()), reverse=reverse)
+    def sort_key(e: FileEntry):
+        name = e["name"].lower()
+        if sort_by == SortKey.NAME:
+            return (0 if e["is_dir"] else 1, name)
+        elif sort_by == SortKey.DATE:
+            return (0 if e["is_dir"] else 1, e["date"], name)
+        elif sort_by == SortKey.EXTENSION:
+            return (0 if e["is_dir"] else 1, e["extension"], name)
+        return (0 if e["is_dir"] else 1, name)
+
+    entries.sort(key=sort_key, reverse=reverse)
 
     return entries
