@@ -1,0 +1,346 @@
+image_path,label_id,label_name
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser
+train/img_001.jpg,9,Ankle boot
+train/img_002.jpg,0,T-shirt/top
+train/img_003.jpg,3,Dress
+train/img_004.jpg,2,Pullover
+train/img_005.jpg,1,Trouser

@@ -83,6 +83,15 @@ class MainWindow(QMainWindow):
         quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self)
         quit_shortcut.activated.connect(self.close)
 
+        back_shortcut = QShortcut(QKeySequence("Alt+Left"), self)
+        back_shortcut.activated.connect(self._go_back)
+
+        forward_shortcut = QShortcut(QKeySequence("Alt+Right"), self)
+        forward_shortcut.activated.connect(self._go_forward)
+
+        home_shortcut = QShortcut(QKeySequence("Alt+Home"), self)
+        home_shortcut.activated.connect(self._go_home)
+
     def _on_tree_clicked(self, index):
         from pathlib import Path
         source_index = self.file_tree.proxy.mapToSource(index)
