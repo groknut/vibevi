@@ -18,7 +18,7 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 1200, 800)
 
         self._home_dir = os.path.expanduser('~')
-        self._current_dir = directory or ""
+        self._current_dir = directory or self._home_dir
         self._sort_key = SortKey.NAME
         self._sort_reverse = False
 
@@ -114,11 +114,19 @@ class MainWindow(QMainWindow):
 
         self.file_tree.file_selected.connect(self._on_file_selected)
 
-        if directory:
-            self.file_tree.set_root(directory)
-            self._current_dir = directory
-            self.dir_label.setText(directory)
+        self.file_tree.set_root(self._current_dir)
+        self.dir_label.setText(self._current_dir)
         self._update_nav()
+
+    def _show_tree(self):
+        """Switch to tree view."""
+        self.sorted_list.setVisible(False)
+        self.file_tree.setVisible(True)
+
+    def _show_sorted(self):
+        """Switch to sorted list view."""
+        self.file_tree.setVisible(False)
+        self.sorted_list.setVisible(True)
 
     def _set_sort(self, key: SortKey):
         self._sort_key = key
@@ -165,14 +173,23 @@ class MainWindow(QMainWindow):
 
             self.sorted_list.addItem(item)
 
-        self.file_tree.setVisible(False)
-        self.sorted_list.setVisible(True)
+        self._show_sorted()
 
     def _on_sorted_click(self, item: QListWidgetItem):
         path = item.data(Qt.ItemDataRole.UserRole)
-        if path and os.path.isfile(path):
+        if not path:
+            return
+
+        if os.path.isdir(path):
+            self._current_dir = path
+            self.file_tree.set_root(path)
+            self.dir_label.setText(path)
+            self._show_tree()
+            self._update_nav()
+        elif os.path.isfile(path):
             self._current_dir = os.path.dirname(path)
             self.dir_label.setText(self._current_dir)
+            self._show_tree()
             self._update_nav()
             self.file_selected.emit(path)
 
@@ -213,6 +230,7 @@ class MainWindow(QMainWindow):
             self._current_dir = parent
             self.dir_label.setText(parent)
             self.file_tree.set_root(parent)
+            self._show_tree()
             self._update_nav()
 
     def _go_forward(self):
@@ -224,6 +242,7 @@ class MainWindow(QMainWindow):
                     self._current_dir = entry.path
                     self.dir_label.setText(entry.path)
                     self.file_tree.set_root(entry.path)
+                    self._show_tree()
                     self._update_nav()
                     return
         except PermissionError:
@@ -233,4 +252,5 @@ class MainWindow(QMainWindow):
         self._current_dir = self._home_dir
         self.dir_label.setText(self._home_dir)
         self.file_tree.set_root(self._home_dir)
+        self._show_tree()
         self._update_nav()
