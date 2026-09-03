@@ -31,12 +31,43 @@ class ContentViewer(QStackedWidget):
         self.addWidget(self.image_view)     # index 1
         self.addWidget(self.placeholder)    # index 2
 
+        self._init_raw_view()
+
         if HAS_MULTIMEDIA:
             self._init_video_player()
         else:
             self.video_view = None
 
         self.set_placeholder("Select a file to view")
+
+    def _init_raw_view(self):
+        self.raw_text = QTextEdit()
+        self.raw_text.setReadOnly(True)
+
+        self.raw_toggle = QPushButton("Show Hex")
+        self.raw_toggle.clicked.connect(self._toggle_raw_view)
+
+        self.raw_is_hex = False
+        self.raw_result = None
+
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.addWidget(self.raw_text)
+        layout.addWidget(self.raw_toggle)
+
+        self.raw_view = container
+        self.addWidget(container)  # index 3
+
+    def _toggle_raw_view(self):
+        if self.raw_result is None:
+            return
+        self.raw_is_hex = not self.raw_is_hex
+        if self.raw_is_hex:
+            self.raw_text.setText(self.raw_result.get("hex_content", ""))
+            self.raw_toggle.setText("Show Text")
+        else:
+            self.raw_text.setText(self.raw_result.get("content", ""))
+            self.raw_toggle.setText("Show Hex")
 
     def _init_video_player(self):
         self.player = QMediaPlayer()
@@ -67,7 +98,7 @@ class ContentViewer(QStackedWidget):
         layout.addLayout(controls)
 
         self.video_view = container
-        self.addWidget(container)  # index 3
+        self.addWidget(container)  # index 4
 
     def _toggle_play(self):
         if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -98,7 +129,7 @@ class ContentViewer(QStackedWidget):
         if file_type == "video":
             if self.video_view and HAS_MULTIMEDIA:
                 self.player.setSource(QUrl.fromLocalFile(result["path"]))
-                self.setCurrentIndex(3)
+                self.setCurrentIndex(4)
             else:
                 self.text_view.setText(content)
                 self.setCurrentIndex(0)
@@ -116,6 +147,12 @@ class ContentViewer(QStackedWidget):
         elif file_type in {"text", "markdown", "log", "json", "xml"}:
             self.text_view.setText(content)
             self.setCurrentIndex(0)
+        elif file_type == "raw":
+            self.raw_result = result
+            self.raw_is_hex = False
+            self.raw_text.setText(content)
+            self.raw_toggle.setText("Show Hex")
+            self.setCurrentIndex(3)
         elif file_type == "error":
             self.placeholder.setText(content)
             self.setCurrentIndex(2)
