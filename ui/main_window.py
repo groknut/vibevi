@@ -118,6 +118,7 @@ class MainWindow(QMainWindow):
         self.sorted_tree.setColumnWidth(3, 80)
         self.sorted_tree.setVisible(False)
         self.sorted_tree.itemClicked.connect(self._on_sorted_click)
+        self.sorted_tree.itemExpanded.connect(self._on_item_expanded)
 
         self.dir_label = QLabel()
         self.dir_label.setStyleSheet("padding: 4px; color: #666;")
@@ -174,35 +175,54 @@ class MainWindow(QMainWindow):
             return
 
         style = self.style()
-        file_icon = style.standardIcon(QStyle.StandardPixmap.SP_FileIcon)
-        dir_icon = style.standardIcon(QStyle.StandardPixmap.SP_DirIcon)
+        self._file_icon = style.standardIcon(QStyle.StandardPixmap.SP_FileIcon)
+        self._dir_icon = style.standardIcon(QStyle.StandardPixmap.SP_DirIcon)
 
         self.sorted_tree.clear()
-        self._build_tree(self._current_dir, self.sorted_tree.invisibleRootItem(),
-                         file_icon, dir_icon)
+        entries = sort_files(self._current_dir, sort_by=self._sort_key,
+                             reverse=self._sort_reverse)
+        for entry in entries:
+            item = self._make_item(entry)
+            self.sorted_tree.addTopLevelItem(item)
+            if entry["is_dir"]:
+                self._add_dummy_child(item)
+
         self._show_sorted()
 
-    def _build_tree(self, dir_path: str, parent_item: QTreeWidgetItem,
-                    file_icon, dir_icon):
-        """Recursively build sorted tree for a directory."""
-        entries = sort_files(dir_path, sort_by=self._sort_key,
-                             reverse=self._sort_reverse)
+    def _make_item(self, entry: dict) -> QTreeWidgetItem:
+        """Create a tree widget item from a file entry."""
+        item = QTreeWidgetItem()
+        item.setText(0, entry["name"])
+        item.setText(1, _format_size(entry["size"]) if not entry["is_dir"] else "")
+        item.setText(2, _format_date(entry["date"]))
+        item.setText(3, entry["extension"])
+        item.setData(0, Qt.ItemDataRole.UserRole, entry["path"])
+        item.setIcon(0, self._dir_icon if entry["is_dir"] else self._file_icon)
+        return item
 
-        for entry in entries:
-            item = QTreeWidgetItem()
-            item.setText(0, entry["name"])
-            item.setText(1, _format_size(entry["size"]) if not entry["is_dir"] else "")
-            item.setText(2, _format_date(entry["date"]))
-            item.setText(3, entry["extension"])
-            item.setData(0, Qt.ItemDataRole.UserRole, entry["path"])
+    def _add_dummy_child(self, parent: QTreeWidgetItem):
+        """Add a dummy child so the expand arrow appears."""
+        dummy = QTreeWidgetItem()
+        dummy.setText(0, "Loading...")
+        parent.addChild(dummy)
 
-            if entry["is_dir"]:
-                item.setIcon(0, dir_icon)
-                parent_item.addChild(item)
-                self._build_tree(entry["path"], item, file_icon, dir_icon)
-            else:
-                item.setIcon(0, file_icon)
-                parent_item.addChild(item)
+    def _expand_dir(self, item: QTreeWidgetItem):
+        """Populate children of a directory item on first expand."""
+        if item.childCount() == 1 and item.child(0).text(0) == "Loading...":
+            item.takeChildren()
+            dir_path = item.data(0, Qt.ItemDataRole.UserRole)
+            if dir_path and os.path.isdir(dir_path):
+                entries = sort_files(dir_path, sort_by=self._sort_key,
+                                     reverse=self._sort_reverse)
+                for entry in entries:
+                    child = self._make_item(entry)
+                    item.addChild(child)
+                    if entry["is_dir"]:
+                        self._add_dummy_child(child)
+
+    def _on_item_expanded(self, item: QTreeWidgetItem):
+        """Load directory contents on first expand."""
+        self._expand_dir(item)
 
     def _on_sorted_click(self, item: QTreeWidgetItem, column: int):
         path = item.data(0, Qt.ItemDataRole.UserRole)

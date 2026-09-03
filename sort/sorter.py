@@ -31,7 +31,7 @@ def scan_directory(path: str, recursive: bool = False) -> list[FileEntry]:
     Returns:
         list[FileEntry] — list of file and directory entries.
     """
-    dir_path = Path(path)
+    dir_path = Path(path).resolve()
     if not dir_path.is_dir():
         return []
 
@@ -42,7 +42,7 @@ def scan_directory(path: str, recursive: bool = False) -> list[FileEntry]:
         if item.name.startswith("."):
             continue
 
-        full_path = str(item)
+        full_path = str(item.resolve())
         stat = item.stat()
         is_dir = item.is_dir()
 
