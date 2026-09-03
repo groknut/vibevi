@@ -1,9 +1,15 @@
 from PyQt6.QtWidgets import (
     QStackedWidget, QTextBrowser, QLabel, QWidget, QVBoxLayout,
-    QPushButton, QHBoxLayout, QSlider, QTextEdit
+    QPushButton, QHBoxLayout, QSlider, QTextEdit, QScrollArea, QSizePolicy
 )
-from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import Qt, QUrl, QSize, QMarginsF
+from PyQt6.QtGui import QPixmap, QPageSize
+
+try:
+    from PyQt6.QtPrintSupport import QPrinter
+    HAS_PRINTER = True
+except ImportError:
+    HAS_PRINTER = False
 
 try:
     from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
@@ -56,6 +62,130 @@ def _escape_html(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+def _html_to_page_images(html: str, dpi: int = 200) -> list[dict]:
+    """Render HTML content to page images using QPrinter and PyMuPDF."""
+    if not HAS_PRINTER:
+        return []
+
+    import tempfile
+    import os
+
+    from PyQt6.QtGui import QTextDocument, QPageLayout
+
+    doc = QTextDocument()
+    doc.setHtml(html)
+
+    pdf_path = os.path.join(tempfile.mkdtemp(prefix="vibevi_docx_"), "rendered.pdf")
+    printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+    printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+    printer.setOutputFileName(pdf_path)
+
+    layout = QPageLayout(
+        QPageSize(QPageSize.PageSizeId.A4),
+        QPageLayout.Orientation.Portrait,
+        QMarginsF(15, 15, 15, 15),
+        QPageLayout.Unit.Millimeter,
+    )
+    printer.setPageLayout(layout)
+
+    doc.print(printer)
+
+    try:
+        import pymupdf
+    except ImportError:
+        return []
+
+    pdf_doc = pymupdf.open(pdf_path)
+    page_images: list[dict] = []
+    img_dir = tempfile.mkdtemp(prefix="vibevi_docx_img_")
+
+    for i in range(len(pdf_doc)):
+        page = pdf_doc.load_page(i)
+        pix = page.get_pixmap(dpi=dpi)
+        image_path = os.path.join(img_dir, f"page_{i + 1}.png")
+        pix.save(image_path)
+        page_images.append({"page": i + 1, "image_path": image_path})
+
+    pdf_doc.close()
+    return page_images
+
+
+class PdfViewer(QWidget):
+    def __init__(self):
+        super().__init__()
+        self._pages: list[dict] = []
+        self._current = 0
+
+        self.image_label = QLabel()
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_label.setScaledContents(True)
+        self.image_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidget(self.image_label)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.prev_btn = QPushButton("< Prev")
+        self.prev_btn.clicked.connect(self._prev_page)
+
+        self.next_btn = QPushButton("Next >")
+        self.next_btn.clicked.connect(self._next_page)
+
+        self.page_label = QLabel()
+        self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        controls = QHBoxLayout()
+        controls.addWidget(self.prev_btn)
+        controls.addWidget(self.page_label)
+        controls.addWidget(self.next_btn)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.scroll_area)
+        layout.addLayout(controls)
+
+    def load(self, result: dict):
+        self._pages = result.get("page_images", [])
+        self._current = 0
+        self._show_page(0)
+
+    def _show_page(self, index: int):
+        if not self._pages:
+            self.image_label.setText("No pages")
+            self.page_label.setText("")
+            self.prev_btn.setEnabled(False)
+            self.next_btn.setEnabled(False)
+            return
+
+        self._current = index
+        page = self._pages[index]
+        pixmap = QPixmap(page["image_path"])
+        if not pixmap.isNull():
+            scaled = pixmap.scaled(
+                self.scroll_area.size(),
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            self.image_label.setPixmap(scaled)
+        else:
+            self.image_label.setText(f"Failed to render page {index + 1}")
+
+        self.page_label.setText(f"Page {index + 1} / {len(self._pages)}")
+        self.prev_btn.setEnabled(index > 0)
+        self.next_btn.setEnabled(index < len(self._pages) - 1)
+
+    def _prev_page(self):
+        if self._current > 0:
+            self._show_page(self._current - 1)
+
+    def _next_page(self):
+        if self._current < len(self._pages) - 1:
+            self._show_page(self._current + 1)
+
+
 class ContentViewer(QStackedWidget):
     def __init__(self):
         super().__init__()
@@ -81,6 +211,9 @@ class ContentViewer(QStackedWidget):
         else:
             self.video_view = None
             self.audio_view = None
+
+        self.pdf_viewer = PdfViewer()
+        self.addWidget(self.pdf_viewer)  # index 6
 
         self.set_placeholder("Select a file to view")
 
@@ -209,6 +342,19 @@ class ContentViewer(QStackedWidget):
             html = f'<pre style="font-size: 14pt; line-height: 1.5;">{_escape_html(content)}</pre>'
             self.text_view.setHtml(html)
             self.setCurrentIndex(0)
+        elif file_type in {"xlsx", "xls"}:
+            self.text_view.setHtml(content)
+            self.setCurrentIndex(0)
+        elif file_type == "docx":
+            page_images = _html_to_page_images(content)
+            if page_images:
+                result["page_images"] = page_images
+                result["pages"] = len(page_images)
+                self.pdf_viewer.load(result)
+                self.setCurrentIndex(6)
+            else:
+                self.text_view.setHtml(content)
+                self.setCurrentIndex(0)
         elif file_type in {"text", "log", "xml", "properties", "csv", "code",
                            "epub", "html", "svg", "archive"}:
             self.text_view.setText(content)
