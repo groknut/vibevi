@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QPixmap
+from parser.epub import cleanup_epub_images
 
 try:
     from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
@@ -146,6 +147,7 @@ class ContentViewer(QStackedWidget):
         self.epub_view = container
         self.epub_chapters = []
         self.epub_index = 0
+        self._epub_images_dir = None
         self.addWidget(container)  # index 4
 
     def _epub_prev(self):
@@ -259,6 +261,8 @@ class ContentViewer(QStackedWidget):
                 self.text_view.setText(content)
                 self.setCurrentIndex(0)
         elif file_type == "epub":
+            cleanup_epub_images(self._epub_images_dir)
+            self._epub_images_dir = result.get("images_dir", "")
             self.epub_title.setText(
                 f"{result.get('title', '')} — {result.get('creator', '')}"
             )

@@ -1,8 +1,13 @@
 import zipfile
 import re
+import os
+import tempfile
+import shutil
 from xml.etree import ElementTree as ET
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
+
+IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp")
 
 
 class EpubResult(FileMeta):
@@ -16,6 +21,7 @@ class EpubResult(FileMeta):
     chapter_count: int
     current_index: int
     files: list[str]
+    images_dir: str
 
 
 def _parse_opf(zf: zipfile.ZipFile, opf_path: str) -> dict:
@@ -59,22 +65,77 @@ def _parse_opf(zf: zipfile.ZipFile, opf_path: str) -> dict:
     return {"title": title, "creator": creator, "language": language, "spine": spine}
 
 
+def _extract_images(zf: zipfile.ZipFile, names: list[str], opf_dir: str) -> str:
+    """Extract images from EPUB to a temp directory.
+
+    Returns the temp directory path.
+    """
+    img_names = [n for n in names if n.lower().endswith(IMAGE_EXTS)]
+    if not img_names:
+        return ""
+
+    tmp_dir = tempfile.mkdtemp(prefix="epub_img_")
+    for img in img_names:
+        try:
+            data = zf.read(img)
+            out_path = os.path.join(tmp_dir, img.replace("/", os.sep))
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            with open(out_path, "wb") as f:
+                f.write(data)
+        except Exception:
+            continue
+    return tmp_dir
+
+
+def _rewrite_image_paths(html: str, images_dir: str, opf_dir: str) -> str:
+    """Replace relative image paths with absolute paths."""
+    if not images_dir:
+        return html
+
+    def _replace(match: re.Match) -> str:
+        prefix = match.group(1)
+        rel_path = match.group(2)
+        suffix = match.group(3)
+
+        full_rel = opf_dir + rel_path if opf_dir else rel_path
+        abs_path = os.path.join(images_dir, full_rel.replace("/", os.sep))
+        if os.path.isfile(abs_path):
+            abs_url = abs_path.replace("\\", "/")
+            return f'{prefix}{abs_url}{suffix}'
+        return match.group(0)
+
+    html = re.sub(r'(src=")([^"]+)(")', _replace, html)
+    html = re.sub(r"(src=')([^']+)(')", _replace, html)
+    html = re.sub(r'(xlink:href=")([^"]+)(")', _replace, html)
+    html = re.sub(r"(xlink:href=')([^']+)(')", _replace, html)
+    return html
+
+
+def cleanup_epub_images(images_dir: str):
+    """Remove temp images directory."""
+    if images_dir and os.path.isdir(images_dir):
+        try:
+            shutil.rmtree(images_dir)
+        except Exception:
+            pass
+
+
 def parse_epub(path: str) -> EpubResult:
     """Parse an EPUB ebook file.
 
-    Extracts HTML chapters in reading order with metadata.
+    Extracts HTML chapters in reading order with metadata and images.
 
     Args:
         path: str — path to the EPUB file.
 
     Returns:
-        dict with type, content (current chapter HTML), chapters list, metadata.
+        dict with type, content, chapters list, metadata, images_dir.
     """
     error_result = {
         "type": "epub", "content": "",
         "title": "", "creator": "", "language": "",
         "chapters": [], "chapter_count": 0, "current_index": 0,
-        "files": [], **file_meta(path),
+        "files": [], "images_dir": "", **file_meta(path),
     }
 
     try:
@@ -104,6 +165,8 @@ def parse_epub(path: str) -> EpubResult:
             if opf_dir:
                 opf_dir += "/"
 
+        images_dir = _extract_images(zf, names, opf_dir)
+
         html_files = [n for n in names if n.endswith((".xhtml", ".html", ".htm"))]
 
         spine = meta["spine"]
@@ -123,6 +186,8 @@ def parse_epub(path: str) -> EpubResult:
             try:
                 with zf.open(h) as f:
                     raw = f.read().decode("utf-8", errors="replace")
+
+                raw = _rewrite_image_paths(raw, images_dir, opf_dir)
 
                 ch_title = ""
                 m = re.search(r"<title[^>]*>(.*?)</title>", raw, re.IGNORECASE | re.DOTALL)
@@ -151,6 +216,7 @@ def parse_epub(path: str) -> EpubResult:
             "chapter_count": len(chapters),
             "current_index": 0,
             "files": names,
+            "images_dir": images_dir,
             **file_meta(path),
         }
     finally:
