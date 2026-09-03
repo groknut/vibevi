@@ -38,12 +38,11 @@ def _parse_wav(path: str) -> dict:
 
 
 def _parse_with_mutagen(path: str) -> dict:
-    """Parse audio metadata using mutagen (mp3, m4a, wav, etc.)."""
-    try:
-        import mutagen
-    except ImportError:
-        return {"format": "", "duration": 0, "channels": 0, "sample_rate": 0,
-                "bit_rate": 0, "bits_per_sample": 0, "tags": {}}
+    """Parse audio metadata using mutagen (mp3, m4a, wav, etc.).
+
+    Raises ImportError if mutagen is not installed.
+    """
+    import mutagen
 
     audio = mutagen.File(path)
     if audio is None:
