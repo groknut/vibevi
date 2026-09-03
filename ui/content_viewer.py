@@ -5,6 +5,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QPixmap
 from parser.epub import cleanup_epub_images
+import os
+import shutil
 
 try:
     from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
@@ -62,6 +64,7 @@ class PdfViewer(QWidget):
         super().__init__()
         self._pages: list[dict] = []
         self._current = 0
+        self._tmp_dir = ""
 
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -95,9 +98,20 @@ class PdfViewer(QWidget):
         layout.addLayout(controls)
 
     def load(self, result: dict):
+        self._cleanup()
         self._pages = result.get("page_images", [])
         self._current = 0
+        if self._pages:
+            self._tmp_dir = os.path.dirname(self._pages[0]["image_path"])
         self._show_page(0)
+
+    def _cleanup(self):
+        if self._tmp_dir and os.path.isdir(self._tmp_dir):
+            try:
+                shutil.rmtree(self._tmp_dir)
+            except Exception:
+                pass
+            self._tmp_dir = ""
 
     def _show_page(self, index: int):
         if not self._pages:
@@ -160,7 +174,7 @@ class ContentViewer(QStackedWidget):
             self.audio_view = None
 
         self.pdf_viewer = PdfViewer()
-        self.addWidget(self.pdf_viewer)  # index 6
+        self.addWidget(self.pdf_viewer)  # index 7
 
         self.set_placeholder("Select a file to view")
 
@@ -365,7 +379,7 @@ class ContentViewer(QStackedWidget):
             self.setCurrentIndex(0)
         elif file_type == "pdf":
             self.pdf_viewer.load(result)
-            self.setCurrentIndex(6)
+            self.setCurrentIndex(7)
         elif file_type == "image":
             path = result.get("path", "")
             pixmap = QPixmap(path)
