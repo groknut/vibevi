@@ -1,12 +1,27 @@
 import os
+import datetime
 from PyQt6.QtWidgets import (
     QMainWindow, QSplitter, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QListWidget, QListWidgetItem, QStyle
+    QPushButton, QLabel, QTreeWidget, QTreeWidgetItem, QStyle
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from .file_tree import FileTree
 from .content_viewer import ContentViewer
 from sort import sort_files, SortKey
+
+
+def _format_size(size: int) -> str:
+    """Format file size in human-readable form."""
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if size < 1024:
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} PB"
+
+
+def _format_date(timestamp: float) -> str:
+    """Format timestamp to YYYY-MM-DD HH:MM."""
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M")
 
 
 class MainWindow(QMainWindow):
@@ -93,9 +108,16 @@ class MainWindow(QMainWindow):
         self.file_tree = FileTree()
         self.file_tree.clicked.connect(self._on_tree_clicked)
 
-        self.sorted_list = QListWidget()
-        self.sorted_list.setVisible(False)
-        self.sorted_list.itemClicked.connect(self._on_sorted_click)
+        self.sorted_tree = QTreeWidget()
+        self.sorted_tree.setHeaderLabels(["Name", "Size", "Date", "Extension"])
+        self.sorted_tree.setRootIsDecorated(False)
+        self.sorted_tree.setSortingEnabled(False)
+        self.sorted_tree.setColumnWidth(0, 300)
+        self.sorted_tree.setColumnWidth(1, 80)
+        self.sorted_tree.setColumnWidth(2, 130)
+        self.sorted_tree.setColumnWidth(3, 80)
+        self.sorted_tree.setVisible(False)
+        self.sorted_tree.itemClicked.connect(self._on_sorted_click)
 
         self.dir_label = QLabel()
         self.dir_label.setStyleSheet("padding: 4px; color: #666;")
@@ -103,7 +125,7 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(nav_bar)
         right_layout.addWidget(sort_bar)
         right_layout.addWidget(self.file_tree)
-        right_layout.addWidget(self.sorted_list)
+        right_layout.addWidget(self.sorted_tree)
         right_layout.addWidget(self.dir_label)
 
         splitter.addWidget(self.content_viewer)
@@ -120,13 +142,13 @@ class MainWindow(QMainWindow):
 
     def _show_tree(self):
         """Switch to tree view."""
-        self.sorted_list.setVisible(False)
+        self.sorted_tree.setVisible(False)
         self.file_tree.setVisible(True)
 
     def _show_sorted(self):
-        """Switch to sorted list view."""
+        """Switch to sorted tree view."""
         self.file_tree.setVisible(False)
-        self.sorted_list.setVisible(True)
+        self.sorted_tree.setVisible(True)
 
     def _set_sort(self, key: SortKey):
         self._sort_key = key
@@ -161,22 +183,26 @@ class MainWindow(QMainWindow):
         file_icon = style.standardIcon(QStyle.StandardPixmap.SP_FileIcon)
         dir_icon = style.standardIcon(QStyle.StandardPixmap.SP_DirIcon)
 
-        self.sorted_list.clear()
+        self.sorted_tree.clear()
         for entry in entries:
-            item = QListWidgetItem(entry["name"])
-            item.setData(Qt.ItemDataRole.UserRole, entry["path"])
+            item = QTreeWidgetItem()
+            item.setText(0, entry["name"])
+            item.setText(1, _format_size(entry["size"]))
+            item.setText(2, _format_date(entry["date"]))
+            item.setText(3, entry["extension"])
+            item.setData(0, Qt.ItemDataRole.UserRole, entry["path"])
 
             if os.path.isdir(entry["path"]):
-                item.setIcon(dir_icon)
+                item.setIcon(0, dir_icon)
             else:
-                item.setIcon(file_icon)
+                item.setIcon(0, file_icon)
 
-            self.sorted_list.addItem(item)
+            self.sorted_tree.addTopLevelItem(item)
 
         self._show_sorted()
 
-    def _on_sorted_click(self, item: QListWidgetItem):
-        path = item.data(Qt.ItemDataRole.UserRole)
+    def _on_sorted_click(self, item: QTreeWidgetItem, column: int):
+        path = item.data(0, Qt.ItemDataRole.UserRole)
         if not path:
             return
 
