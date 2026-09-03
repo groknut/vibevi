@@ -52,6 +52,10 @@ def _format_audio_info(result: dict) -> str:
     return html
 
 
+def _escape_html(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 class ContentViewer(QStackedWidget):
     def __init__(self):
         super().__init__()
@@ -201,7 +205,12 @@ class ContentViewer(QStackedWidget):
         elif file_type == "markdown":
             self.text_view.setHtml(content)
             self.setCurrentIndex(0)
-        elif file_type in {"text", "log", "json", "xml"}:
+        elif file_type in {"yaml", "toml", "json", "ini"}:
+            html = f'<pre style="font-size: 14pt; line-height: 1.5;">{_escape_html(content)}</pre>'
+            self.text_view.setHtml(html)
+            self.setCurrentIndex(0)
+        elif file_type in {"text", "log", "xml", "properties", "csv", "code",
+                           "epub", "html", "svg", "archive"}:
             self.text_view.setText(content)
             self.setCurrentIndex(0)
         elif file_type == "image":
