@@ -1,11 +1,12 @@
 import os
 from PyQt6.QtWidgets import (
     QMainWindow, QSplitter, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel
+    QPushButton, QLabel, QListWidget, QListWidgetItem
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from .file_tree import FileTree
 from .content_viewer import ContentViewer
+from sort import sort_files, SortKey
 
 
 class MainWindow(QMainWindow):
@@ -18,6 +19,8 @@ class MainWindow(QMainWindow):
 
         self._home_dir = os.path.expanduser('~')
         self._current_dir = directory or ""
+        self._sort_key = SortKey.NAME
+        self._sort_reverse = False
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -55,14 +58,52 @@ class MainWindow(QMainWindow):
         nav_layout.addWidget(self.btn_home)
         nav_layout.addStretch()
 
+        sort_bar = QWidget()
+        sort_layout = QHBoxLayout(sort_bar)
+        sort_layout.setContentsMargins(4, 2, 4, 2)
+        sort_layout.setSpacing(2)
+
+        sort_label = QLabel("Sort:")
+        sort_label.setStyleSheet("color: #666; padding: 2px;")
+        sort_layout.addWidget(sort_label)
+
+        self.btn_sort_name = QPushButton("Name")
+        self.btn_sort_name.setCheckable(True)
+        self.btn_sort_name.setChecked(True)
+        self.btn_sort_name.clicked.connect(lambda: self._set_sort(SortKey.NAME))
+
+        self.btn_sort_date = QPushButton("Date")
+        self.btn_sort_date.setCheckable(True)
+        self.btn_sort_date.clicked.connect(lambda: self._set_sort(SortKey.DATE))
+
+        self.btn_sort_ext = QPushButton(".ext")
+        self.btn_sort_ext.setCheckable(True)
+        self.btn_sort_ext.clicked.connect(lambda: self._set_sort(SortKey.EXTENSION))
+
+        self.btn_sort_order = QPushButton("A→Z")
+        self.btn_sort_order.setFixedWidth(40)
+        self.btn_sort_order.clicked.connect(self._toggle_sort_order)
+
+        sort_layout.addWidget(self.btn_sort_name)
+        sort_layout.addWidget(self.btn_sort_date)
+        sort_layout.addWidget(self.btn_sort_ext)
+        sort_layout.addWidget(self.btn_sort_order)
+        sort_layout.addStretch()
+
         self.file_tree = FileTree()
         self.file_tree.clicked.connect(self._on_tree_clicked)
+
+        self.sorted_list = QListWidget()
+        self.sorted_list.setVisible(False)
+        self.sorted_list.itemClicked.connect(self._on_sorted_click)
 
         self.dir_label = QLabel()
         self.dir_label.setStyleSheet("padding: 4px; color: #666;")
 
         right_layout.addWidget(nav_bar)
+        right_layout.addWidget(sort_bar)
         right_layout.addWidget(self.file_tree)
+        right_layout.addWidget(self.sorted_list)
         right_layout.addWidget(self.dir_label)
 
         splitter.addWidget(self.content_viewer)
@@ -78,6 +119,55 @@ class MainWindow(QMainWindow):
             self._current_dir = directory
             self.dir_label.setText(directory)
         self._update_nav()
+
+    def _set_sort(self, key: SortKey):
+        self._sort_key = key
+        for btn in (self.btn_sort_name, self.btn_sort_date, self.btn_sort_ext):
+            btn.setChecked(False)
+
+        if key == SortKey.NAME:
+            self.btn_sort_name.setChecked(True)
+        elif key == SortKey.DATE:
+            self.btn_sort_date.setChecked(True)
+        elif key == SortKey.EXTENSION:
+            self.btn_sort_ext.setChecked(True)
+
+        self._refresh_sorted_list()
+
+    def _toggle_sort_order(self):
+        self._sort_reverse = not self._sort_reverse
+        self.btn_sort_order.setText("Z→A" if self._sort_reverse else "A→Z")
+        self._refresh_sorted_list()
+
+    def _refresh_sorted_list(self):
+        if not self._current_dir or not os.path.isdir(self._current_dir):
+            return
+
+        entries = sort_files(
+            self._current_dir,
+            sort_by=self._sort_key,
+            reverse=self._sort_reverse,
+        )
+
+        self.sorted_list.clear()
+        for entry in entries:
+            label = entry["name"]
+            if entry["extension"]:
+                label = f"({entry['extension']})  {label}"
+            item = QListWidgetItem(label)
+            item.setData(Qt.ItemDataRole.UserRole, entry["path"])
+            self.sorted_list.addItem(item)
+
+        self.file_tree.setVisible(False)
+        self.sorted_list.setVisible(True)
+
+    def _on_sorted_click(self, item: QListWidgetItem):
+        path = item.data(Qt.ItemDataRole.UserRole)
+        if path and os.path.isfile(path):
+            self._current_dir = os.path.dirname(path)
+            self.dir_label.setText(self._current_dir)
+            self._update_nav()
+            self.file_selected.emit(path)
 
     def _on_tree_clicked(self, index):
         from pathlib import Path
