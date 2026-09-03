@@ -1,12 +1,19 @@
+import os
+import tempfile
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
+
+
+class PdfPageImage(TypedDict):
+    page: int
+    image_path: str
 
 
 class PdfResult(FileMeta):
     type: str
     content: str
     pages: int
-    page_texts: list[dict]
+    page_images: list[PdfPageImage]
 
 
 class DocxResult(FileMeta):
@@ -16,24 +23,31 @@ class DocxResult(FileMeta):
 
 
 def parse_pdf(path: str) -> PdfResult:
-    """Parse a PDF file using pdfplumber."""
+    """Parse a PDF file using PyMuPDF, rendering pages as images."""
     try:
-        import pdfplumber
+        import pymupdf
     except ImportError:
-        return {"type": "pdf", "content": "[pdfplumber not installed]", "pages": 0, "page_texts": [], **file_meta(path)}
+        return {"type": "pdf", "content": "[pymupdf not installed]", "pages": 0, "page_images": [], **file_meta(path)}
 
-    pages: list[dict] = []
-    with pdfplumber.open(path) as pdf:
-        for i, page in enumerate(pdf.pages):
-            text = page.extract_text() or ""
-            pages.append({"page": i + 1, "text": text})
+    doc = pymupdf.open(path)
+    page_images: list[PdfPageImage] = []
 
-    full_text = "\n\n".join(p["text"] for p in pages)
+    tmp_dir = tempfile.mkdtemp(prefix="vibevi_pdf_")
+
+    for i in range(len(doc)):
+        page = doc.load_page(i)
+        pix = page.get_pixmap(dpi=200)
+        image_path = os.path.join(tmp_dir, f"page_{i + 1}.png")
+        pix.save(image_path)
+        page_images.append({"page": i + 1, "image_path": image_path})
+
+    doc.close()
+
     return {
         "type": "pdf",
-        "content": full_text,
-        "pages": len(pages),
-        "page_texts": pages,
+        "content": "",
+        "pages": len(page_images),
+        "page_images": page_images,
         **file_meta(path),
     }
 
