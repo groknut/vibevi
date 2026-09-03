@@ -3,7 +3,8 @@ from PyQt6.QtWidgets import (
     QMainWindow, QSplitter, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QListWidget, QListWidgetItem
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QFileInfo
+from PyQt6.QtGui import QFileIconProvider
 from .file_tree import FileTree
 from .content_viewer import ContentViewer
 from sort import sort_files, SortKey
@@ -149,13 +150,16 @@ class MainWindow(QMainWindow):
             reverse=self._sort_reverse,
         )
 
+        icon_provider = QFileIconProvider()
+
         self.sorted_list.clear()
         for entry in entries:
-            label = entry["name"]
-            if entry["extension"]:
-                label = f"({entry['extension']})  {label}"
-            item = QListWidgetItem(label)
+            item = QListWidgetItem(entry["name"])
             item.setData(Qt.ItemDataRole.UserRole, entry["path"])
+
+            info = QFileInfo(entry["path"])
+            item.setIcon(icon_provider.icon(info))
+
             self.sorted_list.addItem(item)
 
         self.file_tree.setVisible(False)
