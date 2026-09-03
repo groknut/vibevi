@@ -1,12 +1,19 @@
+import os
+import tempfile
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
+
+
+class PdfPageImage(TypedDict):
+    page: int
+    image_path: str
 
 
 class PdfResult(FileMeta):
     type: str
     content: str
     pages: int
-    page_texts: list[dict]
+    page_images: list[PdfPageImage]
 
 
 class DocxResult(FileMeta):
@@ -26,11 +33,8 @@ def parse_pdf(path: str) -> PdfResult:
     except ImportError:
         return {"type": "pdf", "content": "[pymupdf not installed]", "pages": 0, "page_images": [], **file_meta(path)}
 
-    import os
-    import tempfile
-
     doc = pymupdf.open(path)
-    page_images: list[dict] = []
+    page_images: list[PdfPageImage] = []
 
     tmp_dir = tempfile.mkdtemp(prefix="vibevi_pdf_")
 

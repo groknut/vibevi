@@ -96,9 +96,10 @@ def parse_html(path: str) -> HtmlResult:
 
     return {
         "type": "html",
-        "content": "\n".join(lines),
+        "content": raw,
         "tags": counter.tags,
         "text_length": len(text),
         "title": title,
+        "text_preview": "\n".join(lines),
         **file_meta(path),
     }
