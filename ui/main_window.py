@@ -1,10 +1,10 @@
 import os
 from PyQt6.QtWidgets import (
     QMainWindow, QSplitter, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QShortcut
+    QPushButton, QLabel
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QKeySequence
+from PyQt6.QtGui import QKeySequence, QShortcut
 from .file_tree import FileTree
 from .content_viewer import ContentViewer
 
