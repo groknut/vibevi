@@ -13,6 +13,45 @@ except ImportError:
     HAS_MULTIMEDIA = False
 
 
+def _format_audio_info(result: dict) -> str:
+    tags = result.get("tags", {})
+    title = tags.get("title", "")
+    artist = tags.get("artist", "")
+    album = tags.get("album", "")
+    duration = result.get("duration", 0)
+    fmt = result.get("format", "")
+    bit_rate = result.get("bit_rate", 0)
+
+    if not title:
+        name = result.get("name", "Unknown")
+        title = name.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
+        if "." in title:
+            title = title.rsplit(".", 1)[0]
+
+    parts = []
+    if fmt:
+        parts.append(fmt.upper())
+    if duration:
+        mins = int(duration) // 60
+        secs = int(duration) % 60
+        parts.append(f"{mins}:{secs:02d}")
+    if bit_rate:
+        kbps = bit_rate // 1000
+        parts.append(f"{kbps} kbps")
+
+    info_line = " · ".join(parts)
+
+    html = f"""
+    <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">{title}</div>
+        <div style="font-size: 14px; color: #666; margin-bottom: 4px;">{artist}</div>
+        {"<div style='font-size: 12px; color: #999; margin-bottom: 4px;'>" + album + "</div>" if album else ""}
+        <div style="font-size: 12px; color: #999;">{info_line}</div>
+    </div>
+    """
+    return html
+
+
 class ContentViewer(QStackedWidget):
     def __init__(self):
         super().__init__()
@@ -103,8 +142,8 @@ class ContentViewer(QStackedWidget):
         self.addWidget(video_container)  # index 4
 
         # Audio view
-        self.audio_meta = QTextEdit()
-        self.audio_meta.setReadOnly(True)
+        self.audio_title = QLabel()
+        self.audio_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         audio_controls = QHBoxLayout()
         audio_controls.addWidget(self.play_btn)
@@ -112,7 +151,7 @@ class ContentViewer(QStackedWidget):
 
         audio_container = QWidget()
         layout = QVBoxLayout(audio_container)
-        layout.addWidget(self.audio_meta)
+        layout.addWidget(self.audio_title)
         layout.addLayout(audio_controls)
 
         self.audio_view = audio_container
@@ -153,7 +192,7 @@ class ContentViewer(QStackedWidget):
                 self.setCurrentIndex(0)
         elif file_type == "audio":
             if self.audio_view and HAS_MULTIMEDIA:
-                self.audio_meta.setText(content)
+                self.audio_title.setText(_format_audio_info(result))
                 self.player.setSource(QUrl.fromLocalFile(result["path"]))
                 self.setCurrentIndex(5)
             else:
