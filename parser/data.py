@@ -33,7 +33,6 @@ def parse_json(path: str) -> JsonResult:
         "type": "json",
         "content": formatted,
         "content_type": content_type,
-        "data": data,
         "keys": None,
         "items": None,
         "value": None,

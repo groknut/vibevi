@@ -48,7 +48,6 @@ def parse_yaml(path: str) -> YamlResult:
     return {
         "type": "yaml",
         "content": formatted,
-        "data": data,
         "keys": keys,
         "items": items,
         **file_meta(path),

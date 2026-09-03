@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import (
     QStackedWidget, QTextBrowser, QLabel, QWidget, QVBoxLayout,
-    QPushButton, QHBoxLayout, QSlider, QTextEdit, QTreeWidget,
-    QTreeWidgetItem
+    QPushButton, QHBoxLayout, QSlider, QTextEdit
 )
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QPixmap
@@ -53,35 +52,6 @@ def _format_audio_info(result: dict) -> str:
     return html
 
 
-def _format_value(v) -> str:
-    if isinstance(v, bool):
-        return "true" if v else "false"
-    if v is None:
-        return ""
-    return str(v)
-
-
-def _populate_tree(parent: QTreeWidgetItem, data):
-    if isinstance(data, dict):
-        for key, value in data.items():
-            if isinstance(value, (dict, list)):
-                item = QTreeWidgetItem(parent, [str(key), ""])
-                item.setExpanded(True)
-                _populate_tree(item, value)
-            else:
-                QTreeWidgetItem(parent, [str(key), _format_value(value)])
-    elif isinstance(data, list):
-        for i, value in enumerate(data):
-            if isinstance(value, (dict, list)):
-                item = QTreeWidgetItem(parent, [f"[{i}]", ""])
-                item.setExpanded(True)
-                _populate_tree(item, value)
-            else:
-                QTreeWidgetItem(parent, [f"[{i}]", _format_value(value)])
-    else:
-        QTreeWidgetItem(parent, [_format_value(data), ""])
-
-
 class ContentViewer(QStackedWidget):
     def __init__(self):
         super().__init__()
@@ -101,7 +71,6 @@ class ContentViewer(QStackedWidget):
         self.addWidget(self.placeholder)    # index 2
 
         self._init_raw_view()
-        self._init_tree_view()
 
         if HAS_MULTIMEDIA:
             self._init_media_player()
@@ -139,37 +108,6 @@ class ContentViewer(QStackedWidget):
         else:
             self.raw_text.setText(self.raw_result.get("content", ""))
             self.raw_toggle.setText("Show Hex")
-
-    def _init_tree_view(self):
-        self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Key", "Value"])
-        self.tree.setAlternatingRowColors(True)
-        self.tree.setRootIsDecorated(True)
-        self.tree.header().setStretchLastSection(True)
-
-        self.tree_view = self.tree
-        self.addWidget(self.tree)  # index 6
-
-    def _show_tree(self, data):
-        self.tree.clear()
-        if isinstance(data, dict):
-            for key, value in data.items():
-                if isinstance(value, (dict, list)):
-                    item = QTreeWidgetItem(self.tree, [str(key), ""])
-                    item.setExpanded(True)
-                    _populate_tree(item, value)
-                else:
-                    QTreeWidgetItem(self.tree, [str(key), _format_value(value)])
-        elif isinstance(data, list):
-            for i, value in enumerate(data):
-                if isinstance(value, (dict, list)):
-                    item = QTreeWidgetItem(self.tree, [f"[{i}]", ""])
-                    item.setExpanded(True)
-                    _populate_tree(item, value)
-                else:
-                    QTreeWidgetItem(self.tree, [f"[{i}]", _format_value(value)])
-        self.tree.resizeColumnToContents(0)
-        self.setCurrentIndex(6)
 
     def _init_media_player(self):
         self.player = QMediaPlayer()
@@ -263,15 +201,9 @@ class ContentViewer(QStackedWidget):
         elif file_type == "markdown":
             self.text_view.setHtml(content)
             self.setCurrentIndex(0)
-        elif file_type in {"yaml", "toml", "json", "ini"}:
-            data = result.get("data")
-            if data is not None:
-                self._show_tree(data)
-            else:
-                self.text_view.setText(content)
-                self.setCurrentIndex(0)
-        elif file_type in {"text", "log", "xml", "properties", "csv", "code",
-                           "epub", "html", "svg", "archive"}:
+        elif file_type in {"text", "log", "json", "xml", "yaml", "toml", "ini",
+                           "properties", "csv", "code", "epub", "html", "svg",
+                           "archive"}:
             self.text_view.setText(content)
             self.setCurrentIndex(0)
         elif file_type == "image":

@@ -52,16 +52,9 @@ def parse_ini(path: str) -> ConfigResult:
             lines.append(f"  {k} = {v}")
             all_keys.append(f"{section}.{k}")
 
-    data: dict[str, dict[str, str]] = {}
-    if parser.defaults():
-        data["DEFAULT"] = dict(parser.defaults())
-    for section in sections:
-        data[section] = dict(parser[section])
-
     return {
         "type": "ini",
         "content": "\n".join(lines),
-        "data": data,
         "sections": sections,
         "keys": all_keys,
         **file_meta(path),
