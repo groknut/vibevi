@@ -9,14 +9,33 @@ class SpreadsheetResult(FileMeta):
     sheets: dict[str, list[list[str]]]
 
 
+def _escape_html(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def _format_sheets(sheets: dict[str, list[list[str]]]) -> str:
-    """Format sheets dict into readable text."""
-    lines: list[str] = []
+    """Format sheets dict into HTML tables."""
+    parts: list[str] = []
     for name, rows in sheets.items():
-        lines.append(f"=== Sheet: {name} ===")
-        for row in rows:
-            lines.append("\t".join(row))
-    return "\n".join(lines)
+        escaped_name = _escape_html(name)
+        parts.append(f'<h3 style="margin: 16px 0 8px;">Sheet: {escaped_name}</h3>')
+        parts.append('<table border="1" cellpadding="4" cellspacing="0" '
+                     'style="border-collapse: collapse; width: 100%;">')
+        if rows:
+            header = rows[0]
+            parts.append('<thead><tr style="background: #f0f0f0; font-weight: bold;">')
+            for cell in header:
+                parts.append(f"<td>{_escape_html(cell)}</td>")
+            parts.append("</tr></thead>")
+            parts.append("<tbody>")
+            for row in rows[1:]:
+                parts.append("<tr>")
+                for cell in row:
+                    parts.append(f"<td>{_escape_html(cell)}</td>")
+                parts.append("</tr>")
+            parts.append("</tbody>")
+        parts.append("</table>")
+    return f'<div style="padding: 10px; font-family: sans-serif;">{"".join(parts)}</div>'
 
 
 def parse_xlsx(path: str) -> SpreadsheetResult:
