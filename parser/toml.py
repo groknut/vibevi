@@ -42,6 +42,7 @@ def parse_toml(path: str) -> TomlResult:
     return {
         "type": "toml",
         "content": formatted,
+        "data": data,
         "keys": keys,
         "items": items,
         **file_meta(path),
