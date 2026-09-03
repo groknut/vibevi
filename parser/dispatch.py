@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Callable
 from ._meta import file_meta
-from .text import parse_txt, parse_md, parse_log
+from .text import parse_txt, parse_log
+from .markdown import parse_md
 from .data import parse_json, parse_xml
 from .document import parse_pdf, parse_docx
 from .spreadsheet import parse_xlsx, parse_xls

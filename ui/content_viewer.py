@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QStackedWidget, QTextEdit, QLabel
+from PyQt6.QtWidgets import QStackedWidget, QTextBrowser, QLabel
 from PyQt6.QtCore import Qt
 
 
@@ -6,8 +6,8 @@ class ContentViewer(QStackedWidget):
     def __init__(self):
         super().__init__()
 
-        self.text_view = QTextEdit()
-        self.text_view.setReadOnly(True)
+        self.text_view = QTextBrowser()
+        self.text_view.setOpenExternalLinks(True)
 
         self.image_view = QLabel()
         self.image_view.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -28,9 +28,11 @@ class ContentViewer(QStackedWidget):
     def display(self, result: dict):
         content = result.get("content", "")
         file_type = result.get("type", "unknown")
-        name = result.get("name", "unknown")
 
-        if file_type in {"text", "markdown", "log", "json", "xml"}:
+        if file_type == "markdown":
+            self.text_view.setHtml(content)
+            self.setCurrentIndex(0)
+        elif file_type in {"text", "log", "json", "xml"}:
             self.text_view.setText(content)
             self.setCurrentIndex(0)
         elif file_type == "image":

@@ -11,4 +11,5 @@ dependencies = [
     "xlrd",
     "Pillow",
     "pyqt6>=6.11.0",
+    "markdown",
 ]
