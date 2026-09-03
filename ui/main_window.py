@@ -1,10 +1,12 @@
 from PyQt6.QtWidgets import QMainWindow, QSplitter
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from .file_tree import FileTree
 from .content_viewer import ContentViewer
 
 
 class MainWindow(QMainWindow):
+    file_selected = pyqtSignal(str)
+
     def __init__(self, directory: str | None = None):
         super().__init__()
         self.setWindowTitle("Vibevi - File Viewer")
@@ -21,7 +23,7 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(splitter)
 
-        self.file_tree.file_selected.connect(self.content_viewer.display)
+        self.file_tree.file_selected.connect(self.file_selected)
 
         if directory:
             self.file_tree.set_root(directory)

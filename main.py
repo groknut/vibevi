@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from PyQt6.QtWidgets import QApplication
-from ui import MainWindow
+from core import App
 
 
 def main():
@@ -13,8 +13,8 @@ def main():
         if path.is_dir():
             directory = str(path)
 
-    window = MainWindow(directory=directory)
-    window.show()
+    vibevi = App(directory=directory)
+    vibevi.show()
     sys.exit(app.exec())
 
 
