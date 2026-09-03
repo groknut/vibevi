@@ -2,11 +2,17 @@ from PyQt6.QtWidgets import (
     QStackedWidget, QTextBrowser, QLabel, QWidget, QVBoxLayout,
     QPushButton, QHBoxLayout, QSlider, QTextEdit, QScrollArea, QSizePolicy
 )
-from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtCore import Qt, QUrl, QSize, QMarginsF
+from PyQt6.QtGui import QPixmap, QPageSize
 from parser.epub import cleanup_epub_images
 import os
 import shutil
+
+try:
+    from PyQt6.QtPrintSupport import QPrinter
+    HAS_PRINTER = True
+except ImportError:
+    HAS_PRINTER = False
 
 try:
     from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
@@ -57,6 +63,53 @@ def _format_audio_info(result: dict) -> str:
 
 def _escape_html(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _html_to_page_images(html: str, dpi: int = 200) -> list[dict]:
+    """Render HTML content to page images using QPrinter and PyMuPDF."""
+    if not HAS_PRINTER:
+        return []
+
+    import tempfile
+
+    from PyQt6.QtGui import QTextDocument, QPageLayout
+
+    doc = QTextDocument()
+    doc.setHtml(html)
+
+    pdf_path = os.path.join(tempfile.mkdtemp(prefix="vibevi_docx_"), "rendered.pdf")
+    printer = QPrinter(QPrinter.PrinterMode.HighResolution)
+    printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
+    printer.setOutputFileName(pdf_path)
+
+    layout = QPageLayout(
+        QPageSize(QPageSize.PageSizeId.A4),
+        QPageLayout.Orientation.Portrait,
+        QMarginsF(15, 15, 15, 15),
+        QPageLayout.Unit.Millimeter,
+    )
+    printer.setPageLayout(layout)
+
+    doc.print(printer)
+
+    try:
+        import pymupdf
+    except ImportError:
+        return []
+
+    pdf_doc = pymupdf.open(pdf_path)
+    page_images: list[dict] = []
+    img_dir = tempfile.mkdtemp(prefix="vibevi_docx_img_")
+
+    for i in range(len(pdf_doc)):
+        page = pdf_doc.load_page(i)
+        pix = page.get_pixmap(dpi=dpi)
+        image_path = os.path.join(img_dir, f"page_{i + 1}.png")
+        pix.save(image_path)
+        page_images.append({"page": i + 1, "image_path": image_path})
+
+    pdf_doc.close()
+    return page_images
 
 
 class PdfViewer(QWidget):
@@ -373,6 +426,16 @@ class ContentViewer(QStackedWidget):
         elif file_type in {"xlsx", "xls"}:
             self.text_view.setHtml(content)
             self.setCurrentIndex(0)
+        elif file_type == "docx":
+            page_images = _html_to_page_images(content)
+            if page_images:
+                result["page_images"] = page_images
+                result["pages"] = len(page_images)
+                self.pdf_viewer.load(result)
+                self.setCurrentIndex(7)
+            else:
+                self.text_view.setHtml(content)
+                self.setCurrentIndex(0)
         elif file_type == "html":
             self.text_view.setHtml(content)
             self.setCurrentIndex(0)
