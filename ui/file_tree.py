@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QTreeView
-from PyQt6.QtGui import QFileSystemModel
-from PyQt6.QtCore import pyqtSignal, QDir, QSortFilterProxyModel
+from PyQt6.QtGui import QFileSystemModel, QKeySequence
+from PyQt6.QtCore import pyqtSignal, QDir, QSortFilterProxyModel, Qt
 from pathlib import Path
 
 
@@ -39,3 +39,17 @@ class FileTree(QTreeView):
         file_path = self.model.filePath(source_index)
         if Path(file_path).is_file():
             self.file_selected.emit(file_path)
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            index = self.currentIndex()
+            if index.isValid():
+                source_index = self.proxy.mapToSource(index)
+                file_path = self.model.filePath(source_index)
+                if Path(file_path).is_file():
+                    self.file_selected.emit(file_path)
+                    return
+                elif Path(file_path).is_dir():
+                    self.set_root(file_path)
+                    return
+        super().keyPressEvent(event)
