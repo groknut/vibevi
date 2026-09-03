@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
 
         self.sorted_tree = QTreeWidget()
         self.sorted_tree.setHeaderLabels(["Name", "Size", "Date", "Extension"])
-        self.sorted_tree.setRootIsDecorated(False)
+        self.sorted_tree.setRootIsDecorated(True)
         self.sorted_tree.setSortingEnabled(False)
         self.sorted_tree.setColumnWidth(0, 300)
         self.sorted_tree.setColumnWidth(1, 80)
@@ -173,17 +173,21 @@ class MainWindow(QMainWindow):
         if not self._current_dir or not os.path.isdir(self._current_dir):
             return
 
-        entries = sort_files(
-            self._current_dir,
-            sort_by=self._sort_key,
-            reverse=self._sort_reverse,
-        )
-
         style = self.style()
         file_icon = style.standardIcon(QStyle.StandardPixmap.SP_FileIcon)
         dir_icon = style.standardIcon(QStyle.StandardPixmap.SP_DirIcon)
 
         self.sorted_tree.clear()
+        self._build_tree(self._current_dir, self.sorted_tree.invisibleRootItem(),
+                         file_icon, dir_icon)
+        self._show_sorted()
+
+    def _build_tree(self, dir_path: str, parent_item: QTreeWidgetItem,
+                    file_icon, dir_icon):
+        """Recursively build sorted tree for a directory."""
+        entries = sort_files(dir_path, sort_by=self._sort_key,
+                             reverse=self._sort_reverse)
+
         for entry in entries:
             item = QTreeWidgetItem()
             item.setText(0, entry["name"])
@@ -194,12 +198,11 @@ class MainWindow(QMainWindow):
 
             if entry["is_dir"]:
                 item.setIcon(0, dir_icon)
+                parent_item.addChild(item)
+                self._build_tree(entry["path"], item, file_icon, dir_icon)
             else:
                 item.setIcon(0, file_icon)
-
-            self.sorted_tree.addTopLevelItem(item)
-
-        self._show_sorted()
+                parent_item.addChild(item)
 
     def _on_sorted_click(self, item: QTreeWidgetItem, column: int):
         path = item.data(0, Qt.ItemDataRole.UserRole)
