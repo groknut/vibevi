@@ -370,6 +370,9 @@ class ContentViewer(QStackedWidget):
             html = f'<pre style="font-size: 14pt; line-height: 1.5;">{_escape_html(content)}</pre>'
             self.text_view.setHtml(html)
             self.setCurrentIndex(0)
+        elif file_type in {"xlsx", "xls"}:
+            self.text_view.setHtml(content)
+            self.setCurrentIndex(0)
         elif file_type == "html":
             self.text_view.setHtml(content)
             self.setCurrentIndex(0)
