@@ -5,7 +5,6 @@ from ._meta import FileMeta, file_meta
 
 
 class AudioResult(FileMeta):
-    """Parsed audio file metadata."""
     type: str
     content: str
     format: str
@@ -18,7 +17,6 @@ class AudioResult(FileMeta):
 
 
 def _parse_wav(path: str) -> dict:
-    """Parse WAV file using the built-in wave module."""
     with wave.open(path, "rb") as wf:
         channels = wf.getnchannels()
         sample_rate = wf.getframerate()
@@ -38,10 +36,6 @@ def _parse_wav(path: str) -> dict:
 
 
 def _parse_with_mutagen(path: str) -> dict:
-    """Parse audio metadata using mutagen (mp3, m4a, wav, etc.).
-
-    Raises ImportError if mutagen is not installed.
-    """
     import mutagen
 
     audio = mutagen.File(path)
@@ -76,29 +70,6 @@ def _parse_with_mutagen(path: str) -> dict:
 
 
 def parse_audio(path: str) -> AudioResult:
-    """Parse an audio file (.mp3, .wav, .m4a) for metadata and tags.
-
-    Uses built-in wave module for WAV files, mutagen for others.
-
-    Args:
-        path: str — path to the audio file.
-
-    Returns:
-        dict: {
-            "type": str — always "audio",
-            "content": str — formatted metadata summary,
-            "format": str — audio format name,
-            "duration": float — duration in seconds,
-            "channels": int — number of audio channels,
-            "sample_rate": int — sample rate in Hz,
-            "bit_rate": int — bit rate in bps,
-            "bits_per_sample": int — bit depth,
-            "tags": dict[str, str] — audio tags (title, artist, etc.),
-            "path": str — full file path,
-            "name": str — file name only,
-            "size": int — file size in bytes,
-        }
-    """
     ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
     if ext == "wav":
         try:

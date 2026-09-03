@@ -36,11 +36,6 @@ PARSERS: dict[str, Callable[[str], dict]] = {
 
 
 def parse_file(path: str) -> dict:
-    """Dispatch to the appropriate parser by file extension.
-
-    Falls back to parse_raw for unsupported extensions.
-    Returns type="error" on parser failure.
-    """
     ext = Path(path).suffix.lower()
     parser = PARSERS.get(ext)
 

@@ -5,7 +5,6 @@ from ._meta import FileMeta, file_meta
 
 
 class VideoResult(FileMeta):
-    """Parsed video file metadata."""
     type: str
     content: str
     format_name: str
@@ -21,7 +20,6 @@ class VideoResult(FileMeta):
 
 
 def _ffprobe(path: str) -> dict:
-    """Run ffprobe and return parsed JSON output."""
     cmd = [
         "ffprobe",
         "-v", "quiet",
@@ -37,32 +35,6 @@ def _ffprobe(path: str) -> dict:
 
 
 def parse_video(path: str) -> VideoResult:
-    """Parse a video file (.mp4, .avi, .mkv, etc.) using ffprobe.
-
-    Extracts format, duration, resolution, codecs, bit rate, and FPS.
-
-    Args:
-        path: str — path to the video file.
-
-    Returns:
-        dict: {
-            "type": str — always "video",
-            "content": str — formatted metadata summary,
-            "format_name": str — container format (e.g. "mov,mp4"),
-            "duration": float — duration in seconds,
-            "width": int — video width in pixels,
-            "height": int — video height in pixels,
-            "codec": str — video codec name,
-            "bit_rate": int — overall bit rate in bps,
-            "fps": float — frames per second,
-            "audio_codec": str — audio codec name,
-            "audio_channels": int — number of audio channels,
-            "audio_sample_rate": int — audio sample rate in Hz,
-            "path": str — full file path,
-            "name": str — file name only,
-            "size": int — file size in bytes,
-        }
-    """
     try:
         data = _ffprobe(path)
     except FileNotFoundError:
