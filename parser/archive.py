@@ -1,4 +1,4 @@
-"""ZIP, TAR and 7z archive parsers."""
+"""ZIP, TAR, 7z and RAR archive parsers."""
 
 import os
 import tarfile
@@ -191,5 +191,65 @@ def parse_7z(path: str) -> ArchiveResult:
         "files": files,
         "count": len(entries),
         "archive_type": "7z",
+        **file_meta(path),
+    }
+
+
+def parse_rar(path: str) -> ArchiveResult:
+    """Parse a RAR archive.
+
+    Args:
+        path: str — path to the RAR file.
+
+    Returns:
+        dict: {
+            "type": str — always "archive",
+            "content": str — file listing with sizes,
+            "files": list[str] — all file paths inside,
+            "count": int — number of entries,
+            "archive_type": str — "rar",
+            "path": str — full file path,
+            "name": str — file name only,
+            "size": int — file size in bytes,
+        }
+    """
+    try:
+        import rarfile
+    except ImportError:
+        return {
+            "type": "archive", "content": "[rarfile not installed]",
+            "files": [], "count": 0, "archive_type": "rar", **file_meta(path),
+        }
+
+    try:
+        with rarfile.RarFile(path, "r") as rf:
+            entries = rf.infolist()
+    except Exception as e:
+        return {
+            "type": "archive", "content": f"[Bad RAR file]: {e}",
+            "files": [], "count": 0, "archive_type": "rar", **file_meta(path),
+        }
+
+    files = [e.filename for e in entries]
+    total_size = sum(e.file_size for e in entries)
+
+    lines = [f"Entries: {len(entries)}", f"Total uncompressed size: {total_size:,} bytes", ""]
+    for e in sorted(entries, key=lambda x: x.filename):
+        comp = e.compress_size
+        uncomp = e.file_size
+        if comp and uncomp:
+            ratio = f" ({comp:,}/{uncomp:,})"
+        elif uncomp:
+            ratio = f" ({uncomp:,})"
+        else:
+            ratio = ""
+        lines.append(f"  {e.filename}{ratio}")
+
+    return {
+        "type": "archive",
+        "content": "\n".join(lines),
+        "files": files,
+        "count": len(entries),
+        "archive_type": "rar",
         **file_meta(path),
     }

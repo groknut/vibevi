@@ -20,7 +20,7 @@ from .image_ext import parse_image_ext
 from .video import parse_video
 from .audio import parse_audio
 from .audio_ext import parse_audio_ext
-from .archive import parse_zip, parse_tar, parse_7z
+from .archive import parse_zip, parse_tar, parse_7z, parse_rar
 from .epub import parse_epub
 from .raw import parse_raw
 
@@ -121,6 +121,7 @@ PARSERS: dict[str, Callable[[str], dict]] = {
     ".tar.xz": parse_tar,
     ".txz": parse_tar,
     ".7z": parse_7z,
+    ".rar": parse_rar,
 }
 
 
