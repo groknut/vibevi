@@ -16,3 +16,6 @@ dependencies = [
     "mutagen",
     "PyYAML",
 ]
+
+[project.scripts]
+start = "main:main"
