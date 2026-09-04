@@ -49,6 +49,11 @@ def _text(el, default: str = "") -> str:
     return (el.text or "").strip()
 
 
+def _escape(text: str) -> str:
+    """Escape HTML special characters."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def _extract_binary_images(root, tmp_dir: str) -> dict[str, str]:
     """Extract base64-encoded <binary> images to a temp directory.
 
@@ -104,7 +109,14 @@ def _element_to_html(el, images: dict[str, str]) -> str:
     if tag and tag.startswith(f"{{{FB2_NS}}}"):
         tag = tag[len(f"{{{FB2_NS}}}"):]
 
-    children_html = "".join(_element_to_html(child, images) for child in el)
+    parts = []
+    if el.text:
+        parts.append(_escape(el.text))
+    for child in el:
+        parts.append(_element_to_html(child, images))
+        if child.tail:
+            parts.append(_escape(child.tail))
+    children_html = "".join(parts)
 
     if tag == "section":
         return f'<div class="section">{children_html}</div>'
@@ -124,7 +136,7 @@ def _element_to_html(el, images: dict[str, str]) -> str:
         return f'<div class="stanza">{children_html}</div>'
     elif tag == "v":
         return f"<p>{children_html}</p>"
-    elif tag == "emphasis":
+    elif tag in ("emphasis", "em"):
         return f"<em>{children_html}</em>"
     elif tag == "strong":
         return f"<strong>{children_html}</strong>"
