@@ -22,6 +22,7 @@ from .audio import parse_audio
 from .audio_ext import parse_audio_ext
 from .archive import parse_zip, parse_tar, parse_7z, parse_rar
 from .epub import parse_epub
+from .fb2 import parse_fb2
 from .raw import parse_raw
 
 
@@ -86,6 +87,7 @@ PARSERS: dict[str, Callable[[str], dict]] = {
     ".xlsx": parse_xlsx,
     ".xls": parse_xls,
     ".epub": parse_epub,
+    ".fb2": parse_fb2,
     # images
     ".png": parse_image,
     ".jpeg": parse_image,

@@ -643,7 +643,7 @@ class ContentViewer(QStackedWidget):
             else:
                 self.text_view.setText(content)
                 self.setCurrentIndex(0)
-        elif file_type == "epub":
+        elif file_type in ("epub", "fb2"):
             cleanup_epub_images(self._epub_images_dir)
             self._epub_images_dir = result.get("images_dir", "")
             self.epub_title.setText(
