@@ -36,3 +36,4 @@ class App:
 
     def show(self):
         """Show the main window."""
+        self.window.show()
