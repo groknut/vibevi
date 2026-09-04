@@ -1,9 +1,18 @@
+"""YAML file parser using PyYAML."""
+
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class YamlResult(FileMeta):
-    """Parsed YAML file metadata."""
+    """Parsed YAML file metadata.
+
+    Attributes:
+        type: Always "yaml".
+        content: Pretty-printed YAML string.
+        keys: Top-level keys if root is a mapping.
+        items: Number of items if root is mapping or sequence.
+    """
     type: str
     content: str
     keys: list[str] | None

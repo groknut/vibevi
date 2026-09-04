@@ -1,10 +1,21 @@
+"""CSV file parser with delimiter detection."""
+
 import csv
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class CsvResult(FileMeta):
-    """Parsed CSV file metadata."""
+    """Parsed CSV file metadata.
+
+    Attributes:
+        type: Always "csv".
+        content: Formatted table preview.
+        rows: Number of data rows.
+        columns: Number of columns.
+        headers: First row as headers.
+        delimiter: Detected delimiter character.
+    """
     type: str
     content: str
     rows: int

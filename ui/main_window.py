@@ -1,3 +1,5 @@
+"""Main application window with file tree and content viewer."""
+
 import os
 from PyQt6.QtWidgets import (
     QMainWindow, QSplitter, QWidget, QVBoxLayout, QHBoxLayout,
@@ -10,9 +12,29 @@ from .content_viewer import ContentViewer
 
 
 class MainWindow(QMainWindow):
+    """Main application window with two-panel layout.
+
+    Left panel: Content viewer (text, image, video, audio, PDF, EPUB).
+    Right panel: Navigation bar, file tree, and directory label.
+
+    Keyboard shortcuts:
+        Ctrl+Q: Close application
+        Alt+Left: Navigate to parent directory
+        Alt+Right: Navigate to first subdirectory
+        Alt+Home: Navigate to home directory
+
+    Signals:
+        file_selected(str): Emitted when a file is selected for viewing.
+    """
+
     file_selected = pyqtSignal(str)
 
     def __init__(self, directory: str | None = None):
+        """Initialize the main window.
+
+        Args:
+            directory: Optional starting directory for the file tree.
+        """
         super().__init__()
         self.setWindowTitle("Vibevi - File Viewer")
         self.setGeometry(100, 100, 1200, 800)
@@ -93,6 +115,13 @@ class MainWindow(QMainWindow):
         home_shortcut.activated.connect(self._go_home)
 
     def _on_tree_clicked(self, index):
+        """Handle click on file tree item.
+
+        Navigates into directories and updates the directory label.
+
+        Args:
+            index: Model index of the clicked item.
+        """
         from pathlib import Path
         source_index = self.file_tree.proxy.mapToSource(index)
         path = self.file_tree.model.filePath(source_index)
@@ -103,16 +132,29 @@ class MainWindow(QMainWindow):
             self._update_nav()
 
     def _on_file_selected(self, path: str):
+        """Handle file selection from the file tree.
+
+        Updates the directory label and emits file_selected.
+
+        Args:
+            path: Full path to the selected file.
+        """
         self._current_dir = os.path.dirname(path)
         self.dir_label.setText(self._current_dir)
         self._update_nav()
         self.file_selected.emit(path)
 
     def _update_nav(self):
+        """Update navigation button states based on current directory."""
         self.btn_back.setEnabled(self._current_dir != "" and self._current_dir != "/")
         self.btn_forward.setEnabled(self._has_subdirs())
 
     def _has_subdirs(self) -> bool:
+        """Check if the current directory has subdirectories.
+
+        Returns:
+            True if at least one non-hidden subdirectory exists.
+        """
         if not self._current_dir or not os.path.isdir(self._current_dir):
             return False
         try:
@@ -124,6 +166,7 @@ class MainWindow(QMainWindow):
         return False
 
     def _go_back(self):
+        """Navigate to the parent directory."""
         parent = os.path.dirname(self._current_dir)
         if parent and parent != self._current_dir:
             self._current_dir = parent
@@ -132,6 +175,7 @@ class MainWindow(QMainWindow):
             self._update_nav()
 
     def _go_forward(self):
+        """Navigate to the first subdirectory."""
         if not self._current_dir or not os.path.isdir(self._current_dir):
             return
         try:
@@ -146,6 +190,7 @@ class MainWindow(QMainWindow):
             pass
 
     def _go_home(self):
+        """Navigate to the user's home directory."""
         self._current_dir = self._home_dir
         self.dir_label.setText(self._home_dir)
         self.file_tree.set_root(self._home_dir)

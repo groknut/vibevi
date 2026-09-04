@@ -1,8 +1,18 @@
+"""Excel spreadsheet parser for XLSX/XLS files."""
+
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class SpreadsheetResult(FileMeta):
+    """Parsed spreadsheet file metadata.
+
+    Attributes:
+        type: Always "xlsx" or "xls".
+        content: HTML table representation of sheets.
+        sheet_names: List of sheet names.
+        sheets: Dict mapping sheet names to row data.
+    """
     type: str
     content: str
     sheet_names: list[str]
@@ -10,11 +20,26 @@ class SpreadsheetResult(FileMeta):
 
 
 def _escape_html(text: str) -> str:
+    """Escape HTML special characters.
+
+    Args:
+        text: Raw text.
+
+    Returns:
+        HTML-safe string.
+    """
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _format_sheets(sheets: dict[str, list[list[str]]]) -> str:
-    """Format sheets dict into HTML tables."""
+    """Format sheets dict into HTML tables.
+
+    Args:
+        sheets: Dict mapping sheet names to 2D row data.
+
+    Returns:
+        HTML string with styled tables for each sheet.
+    """
     parts: list[str] = []
     for name, rows in sheets.items():
         escaped_name = _escape_html(name)
@@ -39,7 +64,14 @@ def _format_sheets(sheets: dict[str, list[list[str]]]) -> str:
 
 
 def parse_xlsx(path: str) -> SpreadsheetResult:
-    """Parse an XLSX file using openpyxl."""
+    """Parse an XLSX file using openpyxl.
+
+    Args:
+        path: Path to the XLSX file.
+
+    Returns:
+        SpreadsheetResult with HTML tables and sheet data.
+    """
     try:
         from openpyxl import load_workbook
     except ImportError:
@@ -66,7 +98,14 @@ def parse_xlsx(path: str) -> SpreadsheetResult:
 
 
 def parse_xls(path: str) -> SpreadsheetResult:
-    """Parse an XLS file using xlrd."""
+    """Parse an XLS file using xlrd.
+
+    Args:
+        path: Path to the XLS file.
+
+    Returns:
+        SpreadsheetResult with HTML tables and sheet data.
+    """
     try:
         import xlrd
     except ImportError:

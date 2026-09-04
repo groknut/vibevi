@@ -1,3 +1,9 @@
+"""Content viewer widget for displaying parsed file results.
+
+Supports text, images, video, audio, PDF, DOCX, EPUB, and raw files.
+Uses QStackedWidget to switch between different viewer modes.
+"""
+
 from PyQt6.QtWidgets import (
     QStackedWidget, QTextBrowser, QLabel, QWidget, QVBoxLayout,
     QPushButton, QHBoxLayout, QSlider, QTextEdit, QScrollArea, QSizePolicy
@@ -23,6 +29,14 @@ except ImportError:
 
 
 def _format_audio_info(result: dict) -> str:
+    """Format audio metadata into styled HTML.
+
+    Args:
+        result: Audio parse result dict.
+
+    Returns:
+        HTML string with title, artist, album, and format info.
+    """
     tags = result.get("tags", {})
     title = tags.get("title", "")
     artist = tags.get("artist", "")
@@ -62,11 +76,29 @@ def _format_audio_info(result: dict) -> str:
 
 
 def _escape_html(text: str) -> str:
+    """Escape HTML special characters.
+
+    Args:
+        text: Raw text.
+
+    Returns:
+        HTML-safe string.
+    """
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _html_to_page_images(html: str, dpi: int = 200) -> list[dict]:
-    """Render HTML content to page images using QPrinter and PyMuPDF."""
+    """Render HTML content to page images using QPrinter and PyMuPDF.
+
+    Converts HTML to PDF via QPrinter, then renders each page as a PNG.
+
+    Args:
+        html: HTML content to render.
+        dpi: Resolution for rendering (default 200).
+
+    Returns:
+        List of dicts with page number and image_path, or empty list.
+    """
     if not HAS_PRINTER:
         return []
 
@@ -113,7 +145,19 @@ def _html_to_page_images(html: str, dpi: int = 200) -> list[dict]:
 
 
 class PdfViewer(QWidget):
+    """PDF/DOCX page viewer with prev/next navigation.
+
+    Displays rendered page images in a scrollable area with
+    navigation controls for multi-page documents.
+
+    Attributes:
+        _pages: List of page image dicts.
+        _current: Current page index.
+        _tmp_dir: Temp directory for page images (cleaned up on load).
+    """
+
     def __init__(self):
+        """Initialize the PDF viewer with scroll area and navigation controls."""
         super().__init__()
         self._pages: list[dict] = []
         self._current = 0
@@ -151,6 +195,13 @@ class PdfViewer(QWidget):
         layout.addLayout(controls)
 
     def load(self, result: dict):
+        """Load a document into the viewer.
+
+        Cleans up previous temp files and loads new page images.
+
+        Args:
+            result: Parse result dict with page_images list.
+        """
         self._cleanup()
         self._pages = result.get("page_images", [])
         self._current = 0
@@ -159,6 +210,7 @@ class PdfViewer(QWidget):
         self._show_page(0)
 
     def _cleanup(self):
+        """Remove temporary page image directory."""
         if self._tmp_dir and os.path.isdir(self._tmp_dir):
             try:
                 shutil.rmtree(self._tmp_dir)
@@ -167,6 +219,11 @@ class PdfViewer(QWidget):
             self._tmp_dir = ""
 
     def _show_page(self, index: int):
+        """Display a specific page by index.
+
+        Args:
+            index: 0-based page index to display.
+        """
         if not self._pages:
             self.image_label.setText("No pages")
             self.page_label.setText("")
@@ -192,16 +249,37 @@ class PdfViewer(QWidget):
         self.next_btn.setEnabled(index < len(self._pages) - 1)
 
     def _prev_page(self):
+        """Navigate to the previous page."""
         if self._current > 0:
             self._show_page(self._current - 1)
 
     def _next_page(self):
+        """Navigate to the next page."""
         if self._current < len(self._pages) - 1:
             self._show_page(self._current + 1)
 
 
 class ContentViewer(QStackedWidget):
+    """Multi-format content viewer using QStackedWidget.
+
+    Widget indices:
+        0: text_view (QTextBrowser)
+        1: image_scroll (QScrollArea with image_label)
+        2: placeholder (QLabel)
+        3: raw_view (QTextEdit with hex toggle)
+        4: epub_view (QTextBrowser with chapter navigation)
+        5: video_view (QVideoWidget with controls)
+        6: audio_view (QLabel with controls)
+        7: pdf_viewer (PdfViewer for PDF/DOCX)
+
+    Attributes:
+        text_view: Browser for text/HTML content.
+        image_label: Label for displaying images.
+        pdf_viewer: PDF/DOCX page viewer.
+    """
+
     def __init__(self):
+        """Initialize all viewer widgets and set up the stacked layout."""
         super().__init__()
 
         self.text_view = QTextBrowser()
@@ -236,6 +314,7 @@ class ContentViewer(QStackedWidget):
         self.set_placeholder("Select a file to view")
 
     def _init_raw_view(self):
+        """Initialize the raw/hex file viewer with toggle button."""
         self.raw_text = QTextEdit()
         self.raw_text.setReadOnly(True)
 
@@ -256,6 +335,7 @@ class ContentViewer(QStackedWidget):
         self._init_epub_view()
 
     def _toggle_raw_view(self):
+        """Toggle between text and hex view for raw files."""
         if self.raw_result is None:
             return
         self.raw_is_hex = not self.raw_is_hex
@@ -267,6 +347,7 @@ class ContentViewer(QStackedWidget):
             self.raw_toggle.setText("Show Hex")
 
     def _init_epub_view(self):
+        """Initialize the EPUB viewer with chapter navigation."""
         self.epub_browser = QTextBrowser()
         self.epub_browser.setOpenExternalLinks(True)
 
@@ -301,16 +382,19 @@ class ContentViewer(QStackedWidget):
         self.addWidget(container)  # index 4
 
     def _epub_prev(self):
+        """Navigate to the previous EPUB chapter."""
         if self.epub_chapters and self.epub_index > 0:
             self.epub_index -= 1
             self._epub_show_chapter()
 
     def _epub_next(self):
+        """Navigate to the next EPUB chapter."""
         if self.epub_chapters and self.epub_index < len(self.epub_chapters) - 1:
             self.epub_index += 1
             self._epub_show_chapter()
 
     def _epub_show_chapter(self):
+        """Display the current EPUB chapter."""
         if not self.epub_chapters:
             return
         ch = self.epub_chapters[self.epub_index]
@@ -322,6 +406,7 @@ class ContentViewer(QStackedWidget):
         self.epub_next_btn.setEnabled(self.epub_index < len(self.epub_chapters) - 1)
 
     def _init_media_player(self):
+        """Initialize the media player for audio/video playback."""
         self.player = QMediaPlayer()
         self.audio_output = QAudioOutput()
         self.player.setAudioOutput(self.audio_output)
@@ -370,28 +455,57 @@ class ContentViewer(QStackedWidget):
         self.addWidget(audio_container)  # index 6
 
     def _toggle_play(self):
+        """Toggle between play and pause states."""
         if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.player.pause()
         else:
             self.player.play()
 
     def _on_position_changed(self, position):
+        """Update slider position when playback position changes.
+
+        Args:
+            position: Current position in milliseconds.
+        """
         self.slider.setValue(position)
 
     def _on_duration_changed(self, duration):
+        """Update slider range when media duration changes.
+
+        Args:
+            duration: Total duration in milliseconds.
+        """
         self.slider.setRange(0, duration)
 
     def _on_state_changed(self, state):
+        """Update play button text when playback state changes.
+
+        Args:
+            state: Current playback state.
+        """
         if state == QMediaPlayer.PlaybackState.PlayingState:
             self.play_btn.setText("Pause")
         else:
             self.play_btn.setText("Play")
 
     def set_placeholder(self, text: str):
+        """Set and display the placeholder text.
+
+        Args:
+            text: Text to display in the placeholder.
+        """
         self.placeholder.setText(text)
         self.setCurrentIndex(2)
 
     def display(self, result: dict):
+        """Display a parsed file result in the appropriate viewer.
+
+        Routes to the correct viewer based on file type and displays
+        the content with appropriate formatting.
+
+        Args:
+            result: Parse result dict with 'type' and 'content' keys.
+        """
         content = result.get("content", "")
         file_type = result.get("type", "unknown")
 

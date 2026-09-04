@@ -1,3 +1,5 @@
+"""JSON and XML file parsers."""
+
 import json
 import xml.etree.ElementTree as ET
 from typing import Any, TypedDict
@@ -5,6 +7,16 @@ from ._meta import FileMeta, file_meta
 
 
 class JsonResult(FileMeta):
+    """Parsed JSON file metadata.
+
+    Attributes:
+        type: Always "json".
+        content: Pretty-printed JSON string.
+        content_type: Python type name of the root value.
+        keys: Top-level keys if root is a dict, else None.
+        items: Number of items if root is dict or list, else None.
+        value: Scalar value if root is neither dict nor list.
+    """
     type: str
     content: str
     content_type: str
@@ -14,6 +26,15 @@ class JsonResult(FileMeta):
 
 
 class XmlResult(FileMeta):
+    """Parsed XML file metadata.
+
+    Attributes:
+        type: Always "xml".
+        content: Indented XML string representation.
+        root_tag: Tag name of the root element.
+        elements: Total element count.
+        attributes: Attributes of the root element.
+    """
     type: str
     content: str
     root_tag: str
@@ -22,7 +43,14 @@ class XmlResult(FileMeta):
 
 
 def parse_json(path: str) -> JsonResult:
-    """Parse a JSON file."""
+    """Parse a JSON file.
+
+    Args:
+        path: Path to the JSON file.
+
+    Returns:
+        JsonResult with formatted content and structural info.
+    """
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -51,7 +79,13 @@ def parse_json(path: str) -> JsonResult:
 
 
 def _dump_element(element: ET.Element, lines: list[str], indent: int) -> None:
-    """Recursively serialize an XML element tree into indented string lines."""
+    """Recursively serialize an XML element tree into indented string lines.
+
+    Args:
+        element: The XML element to serialize.
+        lines: Accumulator list for output lines.
+        indent: Current indentation level.
+    """
     prefix = "  " * indent
     attrs = " ".join(f'{k}="{v}"' for k, v in element.attrib.items())
     tag = element.tag
@@ -74,7 +108,14 @@ def _dump_element(element: ET.Element, lines: list[str], indent: int) -> None:
 
 
 def parse_xml(path: str) -> XmlResult:
-    """Parse an XML file."""
+    """Parse an XML file.
+
+    Args:
+        path: Path to the XML file.
+
+    Returns:
+        XmlResult with formatted content and element stats.
+    """
     tree = ET.parse(path)
     root = tree.getroot()
     lines: list[str] = []

@@ -1,3 +1,9 @@
+"""PDF and DOCX document parsers.
+
+PDF rendering uses PyMuPDF to convert pages to images.
+DOCX parsing uses python-docx to produce rich HTML.
+"""
+
 import os
 import tempfile
 from typing import TypedDict
@@ -5,11 +11,25 @@ from ._meta import FileMeta, file_meta
 
 
 class PdfPageImage(TypedDict):
+    """Single rendered PDF page.
+
+    Attributes:
+        page: 1-based page number.
+        image_path: Path to the rendered PNG image.
+    """
     page: int
     image_path: str
 
 
 class PdfResult(FileMeta):
+    """Parsed PDF file metadata.
+
+    Attributes:
+        type: Always "pdf".
+        content: Empty string (images used for display).
+        pages: Total page count.
+        page_images: List of rendered page images.
+    """
     type: str
     content: str
     pages: int
@@ -17,17 +37,41 @@ class PdfResult(FileMeta):
 
 
 class DocxResult(FileMeta):
+    """Parsed DOCX file metadata.
+
+    Attributes:
+        type: Always "docx".
+        content: Rich HTML representation of the document.
+        paragraphs: Number of paragraphs in the document.
+    """
     type: str
     content: str
     paragraphs: int
 
 
 def _escape_html(text: str) -> str:
+    """Escape HTML special characters.
+
+    Args:
+        text: Raw text.
+
+    Returns:
+        HTML-safe string with escaped &, <, >.
+    """
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def parse_pdf(path: str) -> PdfResult:
-    """Parse a PDF file using PyMuPDF, rendering pages as images."""
+    """Parse a PDF file using PyMuPDF, rendering pages as images.
+
+    Each page is rendered at 200 DPI and saved as a PNG in a temp directory.
+
+    Args:
+        path: Path to the PDF file.
+
+    Returns:
+        PdfResult with page count and image paths.
+    """
     try:
         import pymupdf
     except ImportError:
@@ -57,7 +101,16 @@ def parse_pdf(path: str) -> PdfResult:
 
 
 def _run_to_html(run) -> str:
-    """Convert a single Run to an HTML span with inline styles."""
+    """Convert a single Run to an HTML span with inline styles.
+
+    Preserves bold, italic, underline, font size, color, and font name.
+
+    Args:
+        run: A python-docx Run object.
+
+    Returns:
+        HTML string with inline style attributes.
+    """
     text = _escape_html(run.text)
     if not text:
         return ""
@@ -85,7 +138,16 @@ def _run_to_html(run) -> str:
 
 
 def _paragraph_to_html(p) -> str:
-    """Convert a Paragraph to HTML based on its style and content."""
+    """Convert a Paragraph to HTML based on its style and content.
+
+    Handles headings (h1-h6), lists, title, subtitle, and normal paragraphs.
+
+    Args:
+        p: A python-docx Paragraph object.
+
+    Returns:
+        HTML string representation of the paragraph.
+    """
     style_name = p.style.name if p.style else ""
 
     runs_html = "".join(_run_to_html(r) for r in p.runs)
@@ -123,7 +185,14 @@ def _paragraph_to_html(p) -> str:
 
 
 def _table_to_html(table) -> str:
-    """Convert a Table to an HTML table."""
+    """Convert a Table to an HTML table.
+
+    Args:
+        table: A python-docx Table object.
+
+    Returns:
+        HTML table string with borders and padding.
+    """
     rows_html: list[str] = []
     for row in table.rows:
         cells_html: list[str] = []
@@ -142,7 +211,16 @@ def _table_to_html(table) -> str:
 
 
 def parse_docx(path: str) -> DocxResult:
-    """Parse a DOCX file using python-docx, producing rich HTML."""
+    """Parse a DOCX file using python-docx, producing rich HTML.
+
+    Preserves formatting (bold, italic, headings, lists, tables).
+
+    Args:
+        path: Path to the DOCX file.
+
+    Returns:
+        DocxResult with HTML content and paragraph count.
+    """
     try:
         import docx
     except ImportError:

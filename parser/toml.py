@@ -1,9 +1,18 @@
+"""TOML file parser using stdlib tomllib."""
+
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class TomlResult(FileMeta):
-    """Parsed TOML file metadata."""
+    """Parsed TOML file metadata.
+
+    Attributes:
+        type: Always "toml".
+        content: Formatted TOML string.
+        keys: Top-level keys.
+        items: Number of top-level items.
+    """
     type: str
     content: str
     keys: list[str] | None
@@ -49,7 +58,13 @@ def parse_toml(path: str) -> TomlResult:
 
 
 def _dump_toml(data: dict | list | str | int | float | bool | None, lines: list[str], prefix: str) -> None:
-    """Recursively format TOML data into readable lines."""
+    """Recursively format TOML data into readable lines.
+
+    Args:
+        data: TOML data to format.
+        lines: Accumulator list for output lines.
+        prefix: Current section prefix for nested tables.
+    """
     if isinstance(data, dict):
         simple = {}
         for k, v in data.items():
@@ -69,7 +84,14 @@ def _dump_toml(data: dict | list | str | int | float | bool | None, lines: list[
 
 
 def _toml_value(v: object) -> str:
-    """Format a single TOML value."""
+    """Format a single TOML value.
+
+    Args:
+        v: Value to format.
+
+    Returns:
+        TOML-formatted string representation.
+    """
     if isinstance(v, str):
         return f'"{v}"'
     elif isinstance(v, bool):

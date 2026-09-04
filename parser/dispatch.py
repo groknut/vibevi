@@ -1,3 +1,5 @@
+"""Central dispatch: maps file extensions to parser functions."""
+
 from pathlib import Path
 from typing import Callable
 from ._meta import file_meta

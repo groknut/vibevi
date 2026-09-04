@@ -1,9 +1,22 @@
+"""Extended audio parser for OGG/FLAC/AAC using mutagen."""
+
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class AudioExtResult(FileMeta):
-    """Parsed extended audio file metadata."""
+    """Parsed extended audio file metadata.
+
+    Attributes:
+        type: Always "audio".
+        content: Formatted audio info string.
+        format: Audio format name.
+        duration: Duration in seconds.
+        channels: Number of audio channels.
+        sample_rate: Sample rate in Hz.
+        bit_rate: Bit rate in bps.
+        tags: Audio metadata tags.
+    """
     type: str
     content: str
     format: str
