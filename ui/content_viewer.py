@@ -75,6 +75,44 @@ def _format_audio_info(result: dict) -> str:
     return html
 
 
+def _format_video_info(result: dict) -> str:
+    """Format video metadata into styled HTML.
+
+    Args:
+        result: Video parse result dict.
+
+    Returns:
+        HTML string with resolution, codec, duration, and format info.
+    """
+    width = result.get("width", 0)
+    height = result.get("height", 0)
+    codec = result.get("codec", "")
+    duration = result.get("duration", 0)
+    fmt = result.get("format_name", "")
+    fps = result.get("fps", 0)
+    bit_rate = result.get("bit_rate", 0)
+
+    parts = []
+    if fmt:
+        parts.append(fmt.upper())
+    if width and height:
+        parts.append(f"{width}x{height}")
+    if codec:
+        parts.append(codec.upper())
+    if fps:
+        parts.append(f"{fps} fps")
+    if duration:
+        mins = int(duration) // 60
+        secs = int(duration) % 60
+        parts.append(f"{mins}:{secs:02d}")
+    if bit_rate:
+        kbps = bit_rate // 1000
+        parts.append(f"{kbps} kbps")
+
+    return " · ".join(parts)
+    return html
+
+
 def _escape_html(text: str) -> str:
     """Escape HTML special characters.
 
@@ -408,45 +446,73 @@ class ContentViewer(QStackedWidget):
         self.epub_next_btn.setEnabled(self.epub_index < len(self.epub_chapters) - 1)
 
     def _init_media_player(self):
-        """Initialize the media player for audio/video playback."""
-        self.player = QMediaPlayer()
-        self.audio_output = QAudioOutput()
-        self.player.setAudioOutput(self.audio_output)
+        """Initialize separate media players for audio and video playback."""
+        self._init_video_player()
+        self._init_audio_player()
 
-        self.play_btn = QPushButton("Play")
-        self.play_btn.clicked.connect(self._toggle_play)
+    def _init_video_player(self):
+        """Initialize the video player with QVideoWidget and controls."""
+        self.video_player = QMediaPlayer()
+        self.video_audio_output = QAudioOutput()
+        self.video_player.setAudioOutput(self.video_audio_output)
 
-        self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.slider.setRange(0, 0)
-        self.slider.sliderMoved.connect(self.player.setPosition)
+        self.video_play_btn = QPushButton("Play")
+        self.video_play_btn.clicked.connect(self._toggle_video_play)
 
-        self.player.positionChanged.connect(self._on_position_changed)
-        self.player.durationChanged.connect(self._on_duration_changed)
-        self.player.playbackStateChanged.connect(self._on_state_changed)
+        self.video_slider = QSlider(Qt.Orientation.Horizontal)
+        self.video_slider.setRange(0, 0)
+        self.video_slider.sliderMoved.connect(self.video_player.setPosition)
 
-        # Video view
+        self.video_player.positionChanged.connect(self._on_video_position_changed)
+        self.video_player.durationChanged.connect(self._on_video_duration_changed)
+        self.video_player.playbackStateChanged.connect(self._on_video_state_changed)
+        self.video_player.errorOccurred.connect(self._on_video_error)
+
         self.video_widget = QVideoWidget()
-        self.player.setVideoOutput(self.video_widget)
+        self.video_player.setVideoOutput(self.video_widget)
+
+        self.video_info_label = QLabel()
+        self.video_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.video_info_label.setFixedHeight(24)
+        self.video_info_label.setStyleSheet("font-size: 10px; color: #999;")
 
         controls = QHBoxLayout()
-        controls.addWidget(self.play_btn)
-        controls.addWidget(self.slider)
+        controls.addWidget(self.video_play_btn)
+        controls.addWidget(self.video_slider)
 
         video_container = QWidget()
         layout = QVBoxLayout(video_container)
+        layout.addWidget(self.video_info_label)
         layout.addWidget(self.video_widget)
         layout.addLayout(controls)
 
         self.video_view = video_container
         self.addWidget(video_container)  # index 5
 
-        # Audio view
+    def _init_audio_player(self):
+        """Initialize the audio player with controls and title display."""
+        self.audio_player = QMediaPlayer()
+        self.audio_audio_output = QAudioOutput()
+        self.audio_player.setAudioOutput(self.audio_audio_output)
+
+        self.audio_play_btn = QPushButton("Play")
+        self.audio_play_btn.clicked.connect(self._toggle_audio_play)
+
+        self.audio_slider = QSlider(Qt.Orientation.Horizontal)
+        self.audio_slider.setRange(0, 0)
+        self.audio_slider.sliderMoved.connect(self.audio_player.setPosition)
+
+        self.audio_player.positionChanged.connect(self._on_audio_position_changed)
+        self.audio_player.durationChanged.connect(self._on_audio_duration_changed)
+        self.audio_player.playbackStateChanged.connect(self._on_audio_state_changed)
+        self.audio_player.errorOccurred.connect(self._on_audio_error)
+
         self.audio_title = QLabel()
         self.audio_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         audio_controls = QHBoxLayout()
-        audio_controls.addWidget(self.play_btn)
-        audio_controls.addWidget(self.slider)
+        audio_controls.addWidget(self.audio_play_btn)
+        audio_controls.addWidget(self.audio_slider)
 
         audio_container = QWidget()
         layout = QVBoxLayout(audio_container)
@@ -456,39 +522,59 @@ class ContentViewer(QStackedWidget):
         self.audio_view = audio_container
         self.addWidget(audio_container)  # index 6
 
-    def _toggle_play(self):
-        """Toggle between play and pause states."""
-        if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-            self.player.pause()
+    def _toggle_video_play(self):
+        """Toggle between play and pause states for video."""
+        if self.video_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.video_player.pause()
         else:
-            self.player.play()
+            self.video_player.play()
 
-    def _on_position_changed(self, position):
-        """Update slider position when playback position changes.
+    def _on_video_position_changed(self, position):
+        """Update video slider position when playback position changes."""
+        self.video_slider.setValue(position)
 
-        Args:
-            position: Current position in milliseconds.
-        """
-        self.slider.setValue(position)
+    def _on_video_duration_changed(self, duration):
+        """Update video slider range when media duration changes."""
+        self.video_slider.setRange(0, duration)
 
-    def _on_duration_changed(self, duration):
-        """Update slider range when media duration changes.
-
-        Args:
-            duration: Total duration in milliseconds.
-        """
-        self.slider.setRange(0, duration)
-
-    def _on_state_changed(self, state):
-        """Update play button text when playback state changes.
-
-        Args:
-            state: Current playback state.
-        """
+    def _on_video_state_changed(self, state):
+        """Update video play button text when playback state changes."""
         if state == QMediaPlayer.PlaybackState.PlayingState:
-            self.play_btn.setText("Pause")
+            self.video_play_btn.setText("Pause")
         else:
-            self.play_btn.setText("Play")
+            self.video_play_btn.setText("Play")
+
+    def _on_video_error(self, error, message=""):
+        """Handle video playback errors."""
+        self.video_info_label.setText(f"Playback error: {message}")
+        self.video_play_btn.setEnabled(False)
+
+    def _toggle_audio_play(self):
+        """Toggle between play and pause states for audio."""
+        if self.audio_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            self.audio_player.pause()
+        else:
+            self.audio_player.play()
+
+    def _on_audio_position_changed(self, position):
+        """Update audio slider position when playback position changes."""
+        self.audio_slider.setValue(position)
+
+    def _on_audio_duration_changed(self, duration):
+        """Update audio slider range when media duration changes."""
+        self.audio_slider.setRange(0, duration)
+
+    def _on_audio_state_changed(self, state):
+        """Update audio play button text when playback state changes."""
+        if state == QMediaPlayer.PlaybackState.PlayingState:
+            self.audio_play_btn.setText("Pause")
+        else:
+            self.audio_play_btn.setText("Play")
+
+    def _on_audio_error(self, error, message=""):
+        """Handle audio playback errors."""
+        self.audio_title.setText(f"Playback error: {message}")
+        self.audio_play_btn.setEnabled(False)
 
     def set_placeholder(self, text: str):
         """Set and display the placeholder text.
@@ -540,7 +626,10 @@ class ContentViewer(QStackedWidget):
 
         if file_type == "video":
             if self.video_view and HAS_MULTIMEDIA:
-                self.player.setSource(QUrl.fromLocalFile(result["path"]))
+                self.video_play_btn.setEnabled(True)
+                self.video_info_label.setText(_format_video_info(result))
+                self.video_player.setSource(QUrl.fromLocalFile(result["path"]))
+                self.video_player.play()
                 self.setCurrentIndex(5)
             else:
                 self.text_view.setText(content)
@@ -548,7 +637,8 @@ class ContentViewer(QStackedWidget):
         elif file_type == "audio":
             if self.audio_view and HAS_MULTIMEDIA:
                 self.audio_title.setText(_format_audio_info(result))
-                self.player.setSource(QUrl.fromLocalFile(result["path"]))
+                self.audio_play_btn.setEnabled(True)
+                self.audio_player.setSource(QUrl.fromLocalFile(result["path"]))
                 self.setCurrentIndex(6)
             else:
                 self.text_view.setText(content)
