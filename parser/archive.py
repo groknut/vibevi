@@ -1,4 +1,4 @@
-"""ZIP and TAR archive parsers."""
+"""ZIP, TAR and 7z archive parsers."""
 
 import os
 import tarfile
@@ -131,5 +131,65 @@ def parse_tar(path: str) -> ArchiveResult:
         "files": files,
         "count": len(members),
         "archive_type": archive_type,
+        **file_meta(path),
+    }
+
+
+def parse_7z(path: str) -> ArchiveResult:
+    """Parse a 7z archive.
+
+    Args:
+        path: str — path to the 7z file.
+
+    Returns:
+        dict: {
+            "type": str — always "archive",
+            "content": str — file listing with sizes,
+            "files": list[str] — all file paths inside,
+            "count": int — number of entries,
+            "archive_type": str — "7z",
+            "path": str — full file path,
+            "name": str — file name only,
+            "size": int — file size in bytes,
+        }
+    """
+    try:
+        import py7zr
+    except ImportError:
+        return {
+            "type": "archive", "content": "[py7zr not installed]",
+            "files": [], "count": 0, "archive_type": "7z", **file_meta(path),
+        }
+
+    try:
+        with py7zr.SevenZipFile(path, "r") as szf:
+            entries = szf.list()
+    except Exception as e:
+        return {
+            "type": "archive", "content": f"[Bad 7z file]: {e}",
+            "files": [], "count": 0, "archive_type": "7z", **file_meta(path),
+        }
+
+    files = [e.filename for e in entries]
+    total_size = sum(e.uncompressed for e in entries)
+
+    lines = [f"Entries: {len(entries)}", f"Total uncompressed size: {total_size:,} bytes", ""]
+    for e in sorted(entries, key=lambda x: x.filename):
+        comp = e.compressed
+        uncomp = e.uncompressed
+        if comp and uncomp:
+            ratio = f" ({comp:,}/{uncomp:,})"
+        elif uncomp:
+            ratio = f" ({uncomp:,})"
+        else:
+            ratio = ""
+        lines.append(f"  {e.filename}{ratio}")
+
+    return {
+        "type": "archive",
+        "content": "\n".join(lines),
+        "files": files,
+        "count": len(entries),
+        "archive_type": "7z",
         **file_meta(path),
     }
