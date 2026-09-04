@@ -1,0 +1,8 @@
+#!/bin/bash
+VENV_DIR="/opt/venvs/vibevi"
+SITE_PACKAGES=$(find "$VENV_DIR/lib" -maxdepth 2 -name "site-packages" -type d 2>/dev/null | head -1)
+if [ -z "$SITE_PACKAGES" ]; then
+    echo "Error: vibevi virtualenv not found at $VENV_DIR" >&2
+    exit 1
+fi
+exec python3 "$SITE_PACKAGES/main.py" "$@"
