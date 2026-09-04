@@ -20,7 +20,14 @@ dependencies = [
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["core*", "ui*", "parser*", "sort*"]
+
+[tool.setuptools]
+py-modules = ["main"]
 
 [project.scripts]
 start = "main:main"
+vibevi = "main:main"
