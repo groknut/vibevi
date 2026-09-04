@@ -1,3 +1,5 @@
+"""ZIP and TAR archive parsers."""
+
 import os
 import tarfile
 import zipfile
@@ -6,7 +8,15 @@ from ._meta import FileMeta, file_meta
 
 
 class ArchiveResult(FileMeta):
-    """Parsed archive file metadata."""
+    """Parsed archive file metadata.
+
+    Attributes:
+        type: Always "archive".
+        content: Formatted file listing with sizes.
+        files: List of file paths inside the archive.
+        count: Number of entries.
+        archive_type: Archive format ("zip", "tar", "tar.gz", etc.).
+    """
     type: str
     content: str
     files: list[str]
@@ -60,7 +70,14 @@ def parse_zip(path: str) -> ArchiveResult:
 
 
 def _tar_type(path: str) -> str:
-    """Detect tar compression type from extension."""
+    """Detect tar compression type from file extension.
+
+    Args:
+        path: Path to the tar file.
+
+    Returns:
+        Compression type string ("tar", "tar.gz", "tar.bz2", "tar.xz").
+    """
     lower = path.lower()
     if lower.endswith(".tar.gz") or lower.endswith(".tgz"):
         return "tar.gz"

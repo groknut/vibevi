@@ -1,3 +1,5 @@
+"""Audio file parser using stdlib wave and mutagen for metadata."""
+
 import struct
 import wave
 from typing import TypedDict
@@ -5,6 +7,19 @@ from ._meta import FileMeta, file_meta
 
 
 class AudioResult(FileMeta):
+    """Parsed audio file metadata.
+
+    Attributes:
+        type: Always "audio".
+        content: Formatted audio info string.
+        format: Audio format name.
+        duration: Duration in seconds.
+        channels: Number of audio channels.
+        sample_rate: Sample rate in Hz.
+        bit_rate: Bit rate in bps.
+        bits_per_sample: Bits per sample.
+        tags: Audio metadata tags.
+    """
     type: str
     content: str
     format: str
@@ -17,6 +32,14 @@ class AudioResult(FileMeta):
 
 
 def _parse_wav(path: str) -> dict:
+    """Parse WAV file metadata using stdlib wave module.
+
+    Args:
+        path: Path to the WAV file.
+
+    Returns:
+        Dict with audio metadata.
+    """
     with wave.open(path, "rb") as wf:
         channels = wf.getnchannels()
         sample_rate = wf.getframerate()
@@ -36,6 +59,14 @@ def _parse_wav(path: str) -> dict:
 
 
 def _parse_with_mutagen(path: str) -> dict:
+    """Parse audio metadata using mutagen library.
+
+    Args:
+        path: Path to the audio file.
+
+    Returns:
+        Dict with audio metadata.
+    """
     import mutagen
 
     audio = mutagen.File(path)
@@ -70,6 +101,16 @@ def _parse_with_mutagen(path: str) -> dict:
 
 
 def parse_audio(path: str) -> AudioResult:
+    """Parse an audio file (WAV, MP3, M4A).
+
+    Uses stdlib wave for WAV files, mutagen for others.
+
+    Args:
+        path: Path to the audio file.
+
+    Returns:
+        AudioResult with format, duration, and tag info.
+    """
     ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
     if ext == "wav":
         try:

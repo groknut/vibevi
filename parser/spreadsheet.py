@@ -1,26 +1,77 @@
+"""Excel spreadsheet parser for XLSX/XLS files."""
+
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class SpreadsheetResult(FileMeta):
+    """Parsed spreadsheet file metadata.
+
+    Attributes:
+        type: Always "xlsx" or "xls".
+        content: HTML table representation of sheets.
+        sheet_names: List of sheet names.
+        sheets: Dict mapping sheet names to row data.
+    """
     type: str
     content: str
     sheet_names: list[str]
     sheets: dict[str, list[list[str]]]
 
 
+def _escape_html(text: str) -> str:
+    """Escape HTML special characters.
+
+    Args:
+        text: Raw text.
+
+    Returns:
+        HTML-safe string.
+    """
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
 def _format_sheets(sheets: dict[str, list[list[str]]]) -> str:
-    """Format sheets dict into readable text."""
-    lines: list[str] = []
+    """Format sheets dict into HTML tables.
+
+    Args:
+        sheets: Dict mapping sheet names to 2D row data.
+
+    Returns:
+        HTML string with styled tables for each sheet.
+    """
+    parts: list[str] = []
     for name, rows in sheets.items():
-        lines.append(f"=== Sheet: {name} ===")
-        for row in rows:
-            lines.append("\t".join(row))
-    return "\n".join(lines)
+        escaped_name = _escape_html(name)
+        parts.append(f'<h3 style="margin: 16px 0 8px;">Sheet: {escaped_name}</h3>')
+        parts.append('<table border="1" cellpadding="4" cellspacing="0" '
+                     'style="border-collapse: collapse; width: 100%;">')
+        if rows:
+            header = rows[0]
+            parts.append('<thead><tr style="background: #f0f0f0; font-weight: bold;">')
+            for cell in header:
+                parts.append(f"<td>{_escape_html(cell)}</td>")
+            parts.append("</tr></thead>")
+            parts.append("<tbody>")
+            for row in rows[1:]:
+                parts.append("<tr>")
+                for cell in row:
+                    parts.append(f"<td>{_escape_html(cell)}</td>")
+                parts.append("</tr>")
+            parts.append("</tbody>")
+        parts.append("</table>")
+    return f'<div style="padding: 10px; font-family: sans-serif;">{"".join(parts)}</div>'
 
 
 def parse_xlsx(path: str) -> SpreadsheetResult:
-    """Parse an XLSX file using openpyxl."""
+    """Parse an XLSX file using openpyxl.
+
+    Args:
+        path: Path to the XLSX file.
+
+    Returns:
+        SpreadsheetResult with HTML tables and sheet data.
+    """
     try:
         from openpyxl import load_workbook
     except ImportError:
@@ -47,7 +98,14 @@ def parse_xlsx(path: str) -> SpreadsheetResult:
 
 
 def parse_xls(path: str) -> SpreadsheetResult:
-    """Parse an XLS file using xlrd."""
+    """Parse an XLS file using xlrd.
+
+    Args:
+        path: Path to the XLS file.
+
+    Returns:
+        SpreadsheetResult with HTML tables and sheet data.
+    """
     try:
         import xlrd
     except ImportError:

@@ -1,10 +1,21 @@
+"""SVG file parser with element statistics."""
+
 import xml.etree.ElementTree as ET
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class SvgResult(FileMeta):
-    """Parsed SVG file metadata."""
+    """Parsed SVG file metadata.
+
+    Attributes:
+        type: Always "svg".
+        content: SVG structure summary with element counts.
+        width: Width attribute value.
+        height: Height attribute value.
+        viewbox: viewBox attribute value.
+        elements: Total number of SVG elements.
+    """
     type: str
     content: str
     width: str

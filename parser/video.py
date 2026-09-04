@@ -1,3 +1,5 @@
+"""Video file parser using ffprobe for metadata extraction."""
+
 import json
 import subprocess
 from typing import TypedDict
@@ -5,6 +7,22 @@ from ._meta import FileMeta, file_meta
 
 
 class VideoResult(FileMeta):
+    """Parsed video file metadata.
+
+    Attributes:
+        type: Always "video".
+        content: Formatted video info string.
+        format_name: Container format name.
+        duration: Duration in seconds.
+        width: Video width in pixels.
+        height: Video height in pixels.
+        codec: Video codec name.
+        bit_rate: Bit rate in bps.
+        fps: Frames per second.
+        audio_codec: Audio codec name.
+        audio_channels: Number of audio channels.
+        audio_sample_rate: Audio sample rate in Hz.
+    """
     type: str
     content: str
     format_name: str
@@ -20,6 +38,17 @@ class VideoResult(FileMeta):
 
 
 def _ffprobe(path: str) -> dict:
+    """Run ffprobe to extract media metadata.
+
+    Args:
+        path: Path to the video file.
+
+    Returns:
+        Parsed JSON output from ffprobe.
+
+    Raises:
+        RuntimeError: If ffprobe returns non-zero exit code.
+    """
     cmd = [
         "ffprobe",
         "-v", "quiet",
@@ -35,6 +64,14 @@ def _ffprobe(path: str) -> dict:
 
 
 def parse_video(path: str) -> VideoResult:
+    """Parse a video file using ffprobe.
+
+    Args:
+        path: Path to the video file.
+
+    Returns:
+        VideoResult with format, codec, and resolution info.
+    """
     try:
         data = _ffprobe(path)
     except FileNotFoundError:

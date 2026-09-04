@@ -1,10 +1,15 @@
+"""HTML file parser with tag counting and text extraction."""
+
 from html.parser import HTMLParser
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class _TagCounter(HTMLParser):
-    """Count HTML tags and extract text content."""
+    """Count HTML tags and extract text content.
+
+    Skips script and style elements when extracting text.
+    """
 
     def __init__(self) -> None:
         super().__init__()
@@ -34,7 +39,15 @@ class _TagCounter(HTMLParser):
 
 
 class HtmlResult(FileMeta):
-    """Parsed HTML file metadata."""
+    """Parsed HTML file metadata.
+
+    Attributes:
+        type: Always "html".
+        content: Raw HTML content.
+        tags: Tag name to count mapping.
+        text_length: Total text character count.
+        title: Page title from <title> tag.
+    """
     type: str
     content: str
     tags: dict[str, int]

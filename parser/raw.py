@@ -1,10 +1,21 @@
+"""Raw binary file parser with hex dump view."""
+
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 MAX_RAW_SIZE = 10 * 1024 * 1024  # 10MB
+"""Maximum bytes to read from raw files."""
 
 
 class RawResult(FileMeta):
+    """Parsed raw file metadata.
+
+    Attributes:
+        type: Always "raw".
+        content: Text representation (with replacement chars).
+        hex_content: Hex dump view of the file.
+        truncated: True if file was larger than MAX_RAW_SIZE.
+    """
     type: str
     content: str
     hex_content: str
@@ -12,6 +23,16 @@ class RawResult(FileMeta):
 
 
 def parse_raw(path: str) -> RawResult:
+    """Parse a raw binary file with hex dump preview.
+
+    Reads up to MAX_RAW_SIZE bytes and generates both text and hex views.
+
+    Args:
+        path: Path to the raw file.
+
+    Returns:
+        RawResult with text content and hex dump.
+    """
     size = file_meta(path)["size"]
     truncated = size > MAX_RAW_SIZE
 

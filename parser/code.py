@@ -1,3 +1,5 @@
+"""Source code parser with language detection and line counting."""
+
 import os
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
@@ -39,6 +41,7 @@ LANG_MAP: dict[str, str] = {
     ".proto": "protobuf",
     ".tf": "terraform", ".hcl": "hcl",
 }
+"""Mapping of file extensions to human-readable language names."""
 
 
 class CodeResult(FileMeta):
@@ -53,7 +56,15 @@ class CodeResult(FileMeta):
 
 
 def _count_lines(text: str, lang: str) -> dict[str, int]:
-    """Count total, blank, comment, and code lines."""
+    """Count total, blank, comment, and code lines.
+
+    Args:
+        text: Source code content.
+        lang: Programming language name for comment style detection.
+
+    Returns:
+        Dict with keys: total, blank, comment, code.
+    """
     lines = text.splitlines()
     total = len(lines)
     blank = sum(1 for l in lines if l.strip() == "")

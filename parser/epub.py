@@ -1,3 +1,5 @@
+"""EPUB ebook parser with chapter extraction and image support."""
+
 import zipfile
 import re
 import os
@@ -8,10 +10,24 @@ from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 IMAGE_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp")
+"""Supported image file extensions for EPUB image extraction."""
 
 
 class EpubResult(FileMeta):
-    """Parsed EPUB file metadata."""
+    """Parsed EPUB file metadata.
+
+    Attributes:
+        type: Always "epub".
+        content: HTML content of the first chapter.
+        title: Book title.
+        creator: Author name.
+        language: Language code.
+        chapters: List of chapter dicts with href, html, title.
+        chapter_count: Total number of chapters.
+        current_index: Current chapter index (0).
+        files: All file paths in the archive.
+        images_dir: Path to extracted images directory.
+    """
     type: str
     content: str
     title: str
@@ -25,7 +41,15 @@ class EpubResult(FileMeta):
 
 
 def _parse_opf(zf: zipfile.ZipFile, opf_path: str) -> dict:
-    """Parse content.opf to extract metadata and spine order."""
+    """Parse content.opf to extract metadata and spine order.
+
+    Args:
+        zf: Opened ZipFile object.
+        path: Path to the .opf file inside the archive.
+
+    Returns:
+        Dict with title, creator, language, and spine list.
+    """
     with zf.open(opf_path) as f:
         opf_xml = f.read().decode("utf-8", errors="replace")
 
@@ -68,7 +92,13 @@ def _parse_opf(zf: zipfile.ZipFile, opf_path: str) -> dict:
 def _extract_images(zf: zipfile.ZipFile, names: list[str], opf_dir: str) -> str:
     """Extract images from EPUB to a temp directory.
 
-    Returns the temp directory path.
+    Args:
+        zf: Opened ZipFile object.
+        names: List of file paths in the archive.
+        opf_dir: Directory of the OPF file for path resolution.
+
+    Returns:
+        Path to the temp directory containing extracted images, or "".
     """
     img_names = [n for n in names if n.lower().endswith(IMAGE_EXTS)]
     if not img_names:
@@ -88,7 +118,18 @@ def _extract_images(zf: zipfile.ZipFile, names: list[str], opf_dir: str) -> str:
 
 
 def _rewrite_image_paths(html: str, images_dir: str, opf_dir: str) -> str:
-    """Replace relative image paths with absolute paths."""
+    """Replace relative image paths with absolute paths.
+
+    Handles src and xlink:href attributes in HTML.
+
+    Args:
+        html: Raw HTML content.
+        images_dir: Path to extracted images directory.
+        opf_dir: OPF-relative directory prefix.
+
+    Returns:
+        HTML with rewritten image paths.
+    """
     if not images_dir:
         return html
 
@@ -112,7 +153,11 @@ def _rewrite_image_paths(html: str, images_dir: str, opf_dir: str) -> str:
 
 
 def cleanup_epub_images(images_dir: str):
-    """Remove temp images directory."""
+    """Remove temp images directory.
+
+    Args:
+        images_dir: Path to the temp directory to remove.
+    """
     if images_dir and os.path.isdir(images_dir):
         try:
             shutil.rmtree(images_dir)

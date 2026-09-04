@@ -1,8 +1,21 @@
+"""Image file parser for PNG/JPEG using Pillow."""
+
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class ImageResult(FileMeta):
+    """Parsed image file metadata.
+
+    Attributes:
+        type: Always "image".
+        content: Formatted image info string.
+        format: Image format (PNG, JPEG, etc.).
+        width: Width in pixels.
+        height: Height in pixels.
+        mode: Color mode (RGB, RGBA, etc.).
+        info: Additional image metadata.
+    """
     type: str
     content: str
     format: str
@@ -13,7 +26,14 @@ class ImageResult(FileMeta):
 
 
 def parse_image(path: str) -> ImageResult:
-    """Parse an image file using Pillow."""
+    """Parse an image file using Pillow.
+
+    Args:
+        path: Path to the image file.
+
+    Returns:
+        ImageResult with dimensions, format, and mode.
+    """
     try:
         from PIL import Image
     except ImportError:

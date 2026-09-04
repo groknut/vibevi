@@ -1,9 +1,22 @@
+"""Extended image parser for GIF/BMP/WebP/TIFF with frame count."""
+
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class ImageExtResult(FileMeta):
-    """Parsed extended image file metadata."""
+    """Parsed extended image file metadata.
+
+    Attributes:
+        type: Always "image".
+        content: Formatted image info string.
+        format: Image format.
+        width: Width in pixels.
+        height: Height in pixels.
+        mode: Color mode.
+        info: Additional metadata.
+        frames: Number of frames (1 for static images).
+    """
     type: str
     content: str
     format: str

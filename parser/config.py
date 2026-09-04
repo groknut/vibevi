@@ -1,10 +1,19 @@
+"""INI/CFG/CONF and .properties config file parsers."""
+
 import configparser
 from typing import TypedDict
 from ._meta import FileMeta, file_meta
 
 
 class ConfigResult(FileMeta):
-    """Parsed config file metadata."""
+    """Parsed config file metadata.
+
+    Attributes:
+        type: Always "ini" or "properties".
+        content: Formatted config content.
+        sections: List of section names.
+        keys: All keys as "section.key" strings.
+    """
     type: str
     content: str
     sections: list[str]
