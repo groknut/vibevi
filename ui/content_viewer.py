@@ -508,6 +508,11 @@ class ContentViewer(QStackedWidget):
         movie = QMovie(path)
         if movie.isValid():
             self._gif_movie = movie
+            gif_size = movie.frameRect().size()
+            max_w = self.image_scroll.viewport().width() - 20
+            max_h = self.image_scroll.viewport().height() - 20
+            scaled = gif_size.scaled(max_w, max_h, Qt.AspectRatioMode.KeepAspectRatio)
+            movie.setScaledSize(scaled)
             self.image_label.setMovie(movie)
             movie.start()
         else:
