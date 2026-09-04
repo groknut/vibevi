@@ -11,9 +11,8 @@ Open-source file viewer built with Python/PyQt6. Two-panel UI with a content vie
 - Animated GIF playback
 - Video/audio playback with controls
 - Multi-page PDF/DOCX viewer with page navigation
-- EPUB reader with chapter navigation
+- EPUB/FB2 reader with chapter navigation
 - Hex/raw file viewer toggle
-- Debian packaging support
 
 ## Supported Formats
 
@@ -24,7 +23,7 @@ Open-source file viewer built with Python/PyQt6. Two-panel UI with a content vie
 | Markup | `.html`, `.htm`, `.svg` |
 | Source code | `.py`, `.js`, `.ts`, `.c`, `.cpp`, `.java`, `.go`, `.rs`, `.rb`, `.php`, `.swift`, `.kt`, `.sh`, `.sql`, and more |
 | Config | `.ini`, `.cfg`, `.conf`, `.properties` |
-| Documents | `.pdf`, `.docx`, `.epub` |
+| Documents | `.pdf`, `.docx`, `.epub`, `.fb2` |
 | Spreadsheets | `.xlsx`, `.xls` |
 | Images | `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.webp`, `.tiff` |
 | Video | `.mp4`, `.avi`, `.mkv`, `.mov`, `.wmv`, `.flv`, `.webm`, `.m4v` |
@@ -57,14 +56,6 @@ uv run main.py
 
 ```bash
 uv run start /path/to/directory
-```
-
-### Debian package
-
-```bash
-make build
-sudo dpkg -i ../vibevi_*.deb
-sudo apt install -f
 ```
 
 ## Keyboard Shortcuts
