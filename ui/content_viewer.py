@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QHBoxLayout, QSlider, QTextEdit, QScrollArea, QSizePolicy
 )
 from PyQt6.QtCore import Qt, QUrl, QSize, QMarginsF
-from PyQt6.QtGui import QPixmap, QPageSize
+from PyQt6.QtGui import QPixmap, QPageSize, QMovie
 from parser.epub import cleanup_epub_images
 import os
 import shutil
@@ -308,6 +308,8 @@ class ContentViewer(QStackedWidget):
             self.video_view = None
             self.audio_view = None
 
+        self._gif_movie: QMovie | None = None
+
         self.pdf_viewer = PdfViewer()
         self.addWidget(self.pdf_viewer)  # index 7
 
@@ -497,6 +499,33 @@ class ContentViewer(QStackedWidget):
         self.placeholder.setText(text)
         self.setCurrentIndex(2)
 
+    def _play_gif(self, path: str):
+        """Start playing an animated GIF.
+
+        Args:
+            path: Path to the GIF file.
+        """
+        movie = QMovie(path)
+        if movie.isValid():
+            self._gif_movie = movie
+            gif_size = movie.frameRect().size()
+            max_w = self.image_scroll.viewport().width() - 20
+            max_h = self.image_scroll.viewport().height() - 20
+            scaled = gif_size.scaled(max_w, max_h, Qt.AspectRatioMode.KeepAspectRatio)
+            movie.setScaledSize(scaled)
+            self.image_label.setMovie(movie)
+            movie.start()
+        else:
+            self.image_label.setText(f"Failed to load GIF: {path}")
+
+    def _stop_gif(self):
+        """Stop any currently playing GIF animation."""
+        if self._gif_movie:
+            self._gif_movie.stop()
+            self._gif_movie = None
+            self.image_label.setMovie(None)
+            self.image_label.clear()
+
     def display(self, result: dict):
         """Display a parsed file result in the appropriate viewer.
 
@@ -565,19 +594,24 @@ class ContentViewer(QStackedWidget):
             self.pdf_viewer.load(result)
             self.setCurrentIndex(7)
         elif file_type == "image":
+            self._stop_gif()
             path = result.get("path", "")
-            pixmap = QPixmap(path)
-            if not pixmap.isNull():
-                max_w = self.image_scroll.viewport().width() - 20
-                max_h = self.image_scroll.viewport().height() - 20
-                scaled = pixmap.scaled(
-                    max_w, max_h,
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-                self.image_label.setPixmap(scaled)
+            frames = result.get("frames", 1)
+            if frames > 1:
+                self._play_gif(path)
             else:
-                self.image_label.setText(content)
+                pixmap = QPixmap(path)
+                if not pixmap.isNull():
+                    max_w = self.image_scroll.viewport().width() - 20
+                    max_h = self.image_scroll.viewport().height() - 20
+                    scaled = pixmap.scaled(
+                        max_w, max_h,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation,
+                    )
+                    self.image_label.setPixmap(scaled)
+                else:
+                    self.image_label.setText(content)
             self.setCurrentIndex(1)
         elif file_type == "raw":
             self.raw_result = result

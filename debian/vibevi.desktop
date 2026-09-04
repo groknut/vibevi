@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Vibevi
+GenericName=File Viewer
+Comment=Open-source file viewer for multiple file formats
+Exec=/usr/bin/vibevi %f
+Icon=vibevi
+Terminal=false
+Categories=Utility;FileTools;FileSystem;
+Keywords=file;viewer;browser;explorer;
+MimeType=inode/directory;

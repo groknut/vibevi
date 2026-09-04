@@ -1,0 +1,2 @@
+bin/vibevi usr/bin
+debian/vibevi.desktop usr/share/applications

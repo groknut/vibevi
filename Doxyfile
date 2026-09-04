@@ -1,0 +1,54 @@
+# Doxyfile for Vibevi project
+
+PROJECT_NAME           = "Vibevi"
+PROJECT_NUMBER         = "1.0"
+PROJECT_BRIEF          = "Open-source file viewer built with Python/PyQt"
+
+OUTPUT_DIRECTORY       = docs/doxygen
+CREATE_SUBDIRS         = YES
+
+# Input
+INPUT                  = main.py core ui parser
+FILE_PATTERNS          = *.py
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */__pycache__/* */.venv/*
+
+# Parsing
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+
+# Source browsing
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+STRIP_CODE_COMMENTS    = NO
+
+# Documentation style
+JAVADOC_AUTOBRIEF      = YES
+MULTILINE_CPP_IS_BRIEF = YES
+INHERIT_DOCS           = YES
+
+# Output formats
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+HTML_COLORSTYLE        = AUTO_LIGHT
+
+# Diagrams
+HAVE_DOT               = NO
+CLASS_DIAGRAMS         = NO
+
+# Warnings
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+
+# Python specific
+OPTIMIZE_OUTPUT_FOR_PYTHON = YES
+EXTENSION_MAPPING      = py=Python
+
+# File list
+LIST_FILES             = YES
+LIST_LINES             = YES

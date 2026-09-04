@@ -3,7 +3,7 @@ name = "vibevi"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "pdfplumber",
     "pymupdf",
@@ -15,4 +15,19 @@ dependencies = [
     "markdown",
     "mutagen",
     "PyYAML",
+    "py7zr>=1.1.3",
 ]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["core*", "ui*", "parser*", "sort*"]
+
+[tool.setuptools]
+py-modules = ["main"]
+
+[project.scripts]
+start = "main:main"
+vibevi = "main:main"
