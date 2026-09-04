@@ -1,0 +1,138 @@
+"""Video file parser using ffprobe for metadata extraction."""
+
+import json
+import subprocess
+from typing import TypedDict
+from ._meta import FileMeta, file_meta
+
+
+class VideoResult(FileMeta):
+    """Parsed video file metadata.
+
+    Attributes:
+        type: Always "video".
+        content: Formatted video info string.
+        format_name: Container format name.
+        duration: Duration in seconds.
+        width: Video width in pixels.
+        height: Video height in pixels.
+        codec: Video codec name.
+        bit_rate: Bit rate in bps.
+        fps: Frames per second.
+        audio_codec: Audio codec name.
+        audio_channels: Number of audio channels.
+        audio_sample_rate: Audio sample rate in Hz.
+    """
+    type: str
+    content: str
+    format_name: str
+    duration: float
+    width: int
+    height: int
+    codec: str
+    bit_rate: int
+    fps: float
+    audio_codec: str
+    audio_channels: int
+    audio_sample_rate: int
+
+
+def _ffprobe(path: str) -> dict:
+    """Run ffprobe to extract media metadata.
+
+    Args:
+        path: Path to the video file.
+
+    Returns:
+        Parsed JSON output from ffprobe.
+
+    Raises:
+        RuntimeError: If ffprobe returns non-zero exit code.
+    """
+    cmd = [
+        "ffprobe",
+        "-v", "quiet",
+        "-print_format", "json",
+        "-show_format",
+        "-show_streams",
+        path,
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"ffprobe failed: {result.stderr.strip()}")
+    return json.loads(result.stdout)
+
+
+def parse_video(path: str) -> VideoResult:
+    """Parse a video file using ffprobe.
+
+    Args:
+        path: Path to the video file.
+
+    Returns:
+        VideoResult with format, codec, and resolution info.
+    """
+    try:
+        data = _ffprobe(path)
+    except FileNotFoundError:
+        return {
+            "type": "video", "content": "[ffprobe not installed]",
+            "format_name": "", "duration": 0, "width": 0, "height": 0,
+            "codec": "", "bit_rate": 0, "fps": 0,
+            "audio_codec": "", "audio_channels": 0, "audio_sample_rate": 0,
+            **file_meta(path),
+        }
+
+    fmt = data.get("format", {})
+    video_stream = None
+    audio_stream = None
+    for s in data.get("streams", []):
+        if s.get("codec_type") == "video" and video_stream is None:
+            video_stream = s
+        elif s.get("codec_type") == "audio" and audio_stream is None:
+            audio_stream = s
+
+    duration = float(fmt.get("duration", 0))
+    width = int(video_stream.get("width", 0)) if video_stream else 0
+    height = int(video_stream.get("height", 0)) if video_stream else 0
+    codec = video_stream.get("codec_name", "") if video_stream else ""
+    bit_rate = int(fmt.get("bit_rate", 0))
+
+    fps = 0.0
+    if video_stream:
+        r_frame_rate = video_stream.get("r_frame_rate", "0/1")
+        parts = r_frame_rate.split("/")
+        if len(parts) == 2 and int(parts[1]) != 0:
+            fps = round(int(parts[0]) / int(parts[1]), 2)
+
+    audio_codec = audio_stream.get("codec_name", "") if audio_stream else ""
+    audio_channels = int(audio_stream.get("channels", 0)) if audio_stream else 0
+    audio_sample_rate = int(audio_stream.get("sample_rate", 0)) if audio_stream else 0
+
+    lines = [
+        f"Format: {fmt.get('format_long_name', fmt.get('format_name', ''))}",
+        f"Duration: {duration:.2f}s",
+        f"Resolution: {width} x {height}",
+        f"Video codec: {codec}",
+        f"FPS: {fps}",
+        f"Bit rate: {bit_rate} bps",
+        f"Audio codec: {audio_codec}",
+        f"Audio channels: {audio_channels}",
+        f"Audio sample rate: {audio_sample_rate} Hz",
+    ]
+
+    return {
+        "type": "video",
+        "content": "\n".join(lines),
+        "format_name": fmt.get("format_name", ""),
+        "duration": duration,
+        "width": width,
+        "height": height,
+        "codec": codec,
+        "bit_rate": bit_rate,
+        "fps": fps,
+        "audio_codec": audio_codec,
+        "audio_channels": audio_channels,
+        "audio_sample_rate": audio_sample_rate,
+        **file_meta(path),
+    }
