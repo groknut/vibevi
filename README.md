@@ -30,6 +30,14 @@ Open-source file viewer built with Python/PyQt6. Two-panel UI with a content vie
 | Audio | `.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`, `.aac` |
 | Archives | `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.tar.xz`, `.7z`, `.rar` |
 
+## Demonstration
+
+
+
+https://github.com/user-attachments/assets/2f510c61-fee4-4752-8936-6e131b9f6d4e
+
+
+
 ## Requirements
 
 - Python >= 3.12
